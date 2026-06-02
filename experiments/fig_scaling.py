@@ -33,7 +33,7 @@ from berry_cancellation.estimators import (
 
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 
-LAM = 0.4  # randomization half-width
+LAM = 0.5  # randomization half-width
 ALPHA = 1.5  # Richardson step ratio (>1). Smaller -> shorter worst runtime but the
              # oscillatory residual amplitude ~1/(alpha^2-1) grows, so curves roughen.
 T_MAX = 100.0
