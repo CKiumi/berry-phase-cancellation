@@ -33,9 +33,11 @@ from berry_cancellation.estimators import (
 
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 
-LAM = 0.5  # randomization half-width
-ALPHA = 1.5  # Richardson step ratio (>1). Smaller -> shorter worst runtime but the
-             # oscillatory residual amplitude ~1/(alpha^2-1) grows, so curves roughen.
+LAM = 0.7  # randomization half-width (smallest-worst-runtime smooth config)
+ALPHA = 1.75  # Richardson step ratio (>1). Smaller -> shorter worst runtime but the
+              # oscillatory residual amplitude ~1/(alpha^2-1) grows, so curves roughen.
+              # alpha=1.75 with lam=0.7 is about the smallest worst runtime (~298)
+              # that still gives a smooth T^-4 plot.
 T_MAX = 100.0
 N_POINTS = 20
 
