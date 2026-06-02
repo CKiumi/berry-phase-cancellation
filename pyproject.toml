@@ -1,0 +1,26 @@
+[project]
+name = "berry-phase-cancellation"
+version = "0.1.0"
+description = "Numerics demonstrating adiabatic error cancellation in Berry phase estimation"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib>=3.10.9",
+    "numpy>=2.4.6",
+    "scipy>=1.17.1",
+    # quspin is kept for a future many-body extension; the spin-1/2 numerics
+    # in this repo only need numpy/scipy.
+    "quspin>=1.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["berry_cancellation"]
