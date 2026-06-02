@@ -80,26 +80,17 @@ def main() -> None:
         ax.loglog(T, c * T ** power, color="0.55", lw=1.0, linestyle=style,
                   label=rf"$\propto T^{{{power}}}$")
 
-    # Parameter box + worst-case runtime. For the randomized (1-Richardson)
-    # curves the longest single evolution is T_max * (1+lam) * alpha.
+    # Worst-case single evolution for the randomized (1-Richardson) curves.
     worst = T_MAX * (1.0 + LAM) * alpha
-    info = "\n".join([
-        "spin-1/2 cone loop",
-        rf"$\theta_0={model.theta0/np.pi:.2f}\pi$,  $|B|={model.field:g}$  "
-        rf"($\Delta={model.gap:g}$)",
-        rf"$\alpha={alpha:g}$,  $\lambda={LAM:g}$,  levels$=1$",
-        rf"$T\in[{8:g},\,{T_MAX:g}]$,  {N_POINTS} pts",
-        rf"worst runtime $T(1{{+}}\lambda)\alpha={worst:g}$",
-    ])
-    ax.text(0.985, 0.97, info, transform=ax.transAxes, ha="right", va="top",
-            fontsize=7.5, family="monospace",
-            bbox=dict(boxstyle="round", fc="white", ec="0.7", alpha=0.9))
+    params = (rf"$\alpha={alpha:g}$,  $\lambda={LAM:g}$,  levels$=1$,  "
+              rf"$T\in[{8:g},{T_MAX:g}]$,  "
+              rf"worst runtime $T(1{{+}}\lambda)\alpha={worst:g}$")
 
     ax.set_xlim(7.0, T_MAX * 1.15)
     ax.set_xlabel("runtime $T$")
     ax.set_ylabel(r"phase error  $|\tilde\theta_B - \theta_B|$  (rad)")
-    ax.set_title("Adiabatic error cancellation in Berry phase estimation\n"
-                 "(spin-1/2 cone loop)")
+    ax.set_title("Adiabatic error cancellation in Berry phase estimation "
+                 "(spin-1/2 cone loop)\n" + params, fontsize=10)
     ax.legend(fontsize=8, ncol=2, loc="lower left")
     ax.grid(True, which="both", alpha=0.2)
     fig.tight_layout()
