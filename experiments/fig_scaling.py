@@ -47,9 +47,6 @@ def main() -> None:
     # Richardson removes the non-oscillatory T^-2 term; averaging suppresses the
     # oscillatory residual by the decay of the distribution's characteristic
     # function: uniform (CF ~ k^-1) -> T^-3, triangle (CF ~ k^-2) -> T^-4.
-    print("computing runtime-randomized bias (uniform) ...")
-    e_rand_u = randomized_richardson_bias(model, T, alpha=alpha, lam=0.5,
-                                          levels=1, dist="uniform", n_nodes=129)
     print("computing runtime-randomized bias (triangle) ...")
     e_rand_t = randomized_richardson_bias(model, T, alpha=alpha, lam=0.5,
                                           levels=1, dist="triangle", n_nodes=129)
@@ -58,8 +55,6 @@ def main() -> None:
     ax.loglog(T, e_single, "o-", ms=4, label=r"single evolution  $|\varphi|$")
     ax.loglog(T, e_fr, "s-", ms=4, label=r"forward--reverse")
     ax.loglog(T, e_rich, "^-", ms=4, label=r"+ Richardson ($\alpha=2$)")
-    ax.loglog(T, e_rand_u, "d-", ms=4, color="C3",
-              label=r"+ uniform randomization")
     ax.loglog(T, e_rand_t, "v-", ms=4, color="C4",
               label=r"+ triangle randomization")
 
@@ -68,7 +63,6 @@ def main() -> None:
     for power, e, style in [
         (-1, e_single, ":"),
         (-2, e_fr, "--"),
-        (-3, e_rand_u, "-."),
         (-4, e_rand_t, (0, (5, 1))),
     ]:
         c = np.median(e / T**power)

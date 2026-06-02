@@ -92,8 +92,10 @@ uv run pytest                               # checks references + scaling slopes
 ```
 
 `figures/scaling.png` is the headline plot: curves whose log–log envelopes follow
-`T⁻¹` (single), `T⁻²` (forward–reverse, Richardson), `T⁻³` (uniform
-randomization), and `T⁻⁴` (triangle randomization). The forward–reverse and
-Richardson curves oscillate under their `T⁻²` envelope because the residual
-oscillates at frequency `ω = ∫Δ ds`; runtime randomization averages this away,
-the faster the smoother the distribution.
+`T⁻¹` (single), `T⁻²` (forward–reverse, Richardson), and `T⁻⁴` (triangle
+randomization). The forward–reverse and Richardson curves oscillate under their
+`T⁻²` envelope because the residual oscillates at frequency `ω = ∫Δ ds`; the
+triangle-distribution randomization averages this away to `T⁻⁴`. (Uniform
+randomization gives `T⁻³` — still oscillatory, since averaging only suppresses
+the oscillatory residual by one power; it is available via the `dist` argument
+but omitted from the plot.)
