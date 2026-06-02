@@ -51,12 +51,10 @@ two-runtime Richardson extrapolant at `T` and `αT` removes the non-oscillatory
 `T_j = T·X`, `X ∈ [1−λ, 1+λ]`, suppresses the remaining oscillatory `T⁻²` term
 by one further power of `1/T`.
 
-The randomization is a **real Monte Carlo** run (`N = 1000` shots): draw random
-runtimes `T_j = T·X_j`, evaluate the single-event estimator at each, and average.
-Because uniform randomization suppresses the oscillatory bias to `~ T⁻³`, the
-estimate's residual error is **statistical**, so we report its standard deviation
-`σ_N = std/√N` (variance `= σ_N²`) rather than a noisy bias point estimate. `σ_N`
-is positive-definite and follows a clean `~ T⁻²` power law on a log-log axis.
+The reported randomization curve is the **deterministic bias**
+`|E_X[θ̃_{B,R}] − θ_B|`, the infinite-shot limit evaluated by quadrature over the
+uniform runtime distribution. Uniform randomization removes the leading
+oscillatory `T⁻²` term in expectation, so the bias scales as `~ T⁻³`.
 
 ## Layout
 
@@ -67,10 +65,8 @@ berry_cancellation/
   reference.py      Wilson-loop Berry phase, dynamical phase, angle wrapping
   estimators.py     single / forward–reverse / Richardson / randomized errors
 experiments/
-  fig_scaling.py                  main figure: error vs T (single/FR/Richardson)
-                                  plus randomization std (real N=1000 Monte Carlo)
-  fig_spin_half_check.py          Berry phase vs analytic half-solid-angle
-  fig_randomization_montecarlo.py randomization estimator std vs T (~T^-2)
+  fig_scaling.py          main figure: error vs T for all four estimators
+  fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
 tests/
   test_cancellation.py    references, unitarity, integrator convergence, slopes
 ```
@@ -86,7 +82,6 @@ integrator error is verified to sit far below the adiabatic error it measures.
 uv sync                                     # set up the environment
 uv run python experiments/fig_scaling.py    # -> figures/scaling.png
 uv run python experiments/fig_spin_half_check.py
-uv run python experiments/fig_randomization_montecarlo.py  # randomization std vs T
 uv run pytest                               # checks references + scaling slopes
 ```
 
