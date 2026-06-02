@@ -28,7 +28,7 @@ from berry_cancellation.estimators import (
 
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 
-N_SHOTS = 10000
+N_SHOTS = 1000
 
 
 def main() -> None:
@@ -47,33 +47,34 @@ def main() -> None:
     e_rich = richardson_error(model, T, alpha=alpha)
     # Real runtime randomization (Monte Carlo) on a coarser grid -- N=10000 shots
     # per base T is the expensive curve, so it uses fewer T points.
-    T_rand = np.geomspace(8.0, 150.0, 13)
+    T_rand = np.geomspace(8.0, 150.0, 16)
     print(f"running real runtime randomization (N={N_SHOTS} shots) ...")
-    e_rand, e_rand_sem, _ = randomized_richardson_montecarlo(
+    # The randomized estimator's error is statistical, not a noisy bias point:
+    # report its standard deviation sigma_N = std/sqrt(N) (positive-definite,
+    # clean ~T^-2 on log-log), returned directly as the SEM.
+    _, e_rand_std, _ = randomized_richardson_montecarlo(
         model, T_rand, n_shots=N_SHOTS, alpha=alpha, lam=0.5, seed=0
     )
-    e_rand = np.abs(e_rand)
 
     fig, ax = plt.subplots(figsize=(7.0, 5.2))
     ax.loglog(T, e_single, "o-", ms=4, label=r"single evolution  $|\varphi|$")
     ax.loglog(T, e_fr, "s-", ms=4, label=r"forward--reverse")
     ax.loglog(T, e_rich, "^-", ms=4, label=r"+ Richardson ($\alpha=2$)")
-    ax.errorbar(T_rand, e_rand, yerr=e_rand_sem, fmt="d", ms=5, capsize=2,
-                color="C3",
-                label=rf"+ runtime randomization ($N={N_SHOTS}$)")
+    ax.loglog(T_rand, e_rand_std, "d-", ms=5, color="C3",
+              label=rf"+ randomization: std ($N={N_SHOTS}$)")
 
     # Reference power-law guides, anchored at the left edge of each curve.
     T0 = T[0]
     for power, e0, style in [
         (-1, e_single[0], ":"),
         (-2, e_fr[0], "--"),
-        (-3, e_rand[0] * 4, "-."),
     ]:
         ax.loglog(T, e0 * (T / T0) ** power, style, color="0.5", lw=1.0,
                   label=rf"$\propto T^{{{power}}}$")
 
+    ax.set_xlim(7.0, 230.0)
     ax.set_xlabel("runtime $T$")
-    ax.set_ylabel(r"phase error  $|\tilde\theta_B - \theta_B|$")
+    ax.set_ylabel(r"phase error / std  (rad)")
     ax.set_title("Adiabatic error cancellation in Berry phase estimation\n"
                  "(spin-1/2 cone loop)")
     ax.legend(fontsize=8, ncol=2)

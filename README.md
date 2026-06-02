@@ -51,13 +51,12 @@ two-runtime Richardson extrapolant at `T` and `αT` removes the non-oscillatory
 `T_j = T·X`, `X ∈ [1−λ, 1+λ]`, suppresses the remaining oscillatory `T⁻²` term
 by one further power of `1/T`.
 
-The randomization curve is a **real Monte Carlo** run with `N = 10000` shots:
-draw random runtimes `T_j = T·X_j`, evaluate the single-event estimator at each,
-and average. The sample mean converges to the deterministic bias `~ T⁻³` but
-carries a statistical floor `~ T⁻² N⁻¹/²` from the residual oscillatory sector;
-both regimes are visible. (The deterministic bias itself — the infinite-shot
-limit `|E_X[θ̃_{B,R}] − θ_B|` — is computed by quadrature and overlaid as a
-reference in `fig_randomization_montecarlo.py`.)
+The randomization is a **real Monte Carlo** run (`N = 1000` shots): draw random
+runtimes `T_j = T·X_j`, evaluate the single-event estimator at each, and average.
+Because uniform randomization suppresses the oscillatory bias to `~ T⁻³`, the
+estimate's residual error is **statistical**, so we report its standard deviation
+`σ_N = std/√N` (variance `= σ_N²`) rather than a noisy bias point estimate. `σ_N`
+is positive-definite and follows a clean `~ T⁻²` power law on a log-log axis.
 
 ## Layout
 
@@ -68,10 +67,10 @@ berry_cancellation/
   reference.py      Wilson-loop Berry phase, dynamical phase, angle wrapping
   estimators.py     single / forward–reverse / Richardson / randomized errors
 experiments/
-  fig_scaling.py                  main figure: error vs T for all four estimators
-                                  (randomization curve = real N=10000 Monte Carlo)
+  fig_scaling.py                  main figure: error vs T (single/FR/Richardson)
+                                  plus randomization std (real N=1000 Monte Carlo)
   fig_spin_half_check.py          Berry phase vs analytic half-solid-angle
-  fig_randomization_montecarlo.py 10k-shot randomization alone: MC mean, bias, floor
+  fig_randomization_montecarlo.py randomization estimator std vs T (~T^-2)
 tests/
   test_cancellation.py    references, unitarity, integrator convergence, slopes
 ```
@@ -85,9 +84,9 @@ integrator error is verified to sit far below the adiabatic error it measures.
 
 ```bash
 uv sync                                     # set up the environment
-uv run python experiments/fig_scaling.py    # -> figures/scaling.png (~3-4 min, 10k-shot MC)
+uv run python experiments/fig_scaling.py    # -> figures/scaling.png
 uv run python experiments/fig_spin_half_check.py
-uv run python experiments/fig_randomization_montecarlo.py  # ~3-4 min, 10k shots
+uv run python experiments/fig_randomization_montecarlo.py  # randomization std vs T
 uv run pytest                               # checks references + scaling slopes
 ```
 
