@@ -9,6 +9,7 @@ from berry_cancellation import SpinHalfLoop, berry_phase_wilson
 from berry_cancellation.estimators import (
     forward_reverse_error,
     randomized_richardson_bias,
+    randomized_richardson_montecarlo,
     richardson_error,
     single_phase_error,
 )
@@ -72,3 +73,17 @@ def test_randomization_steeper_than_richardson():
     slope = _slope(T, randomized_richardson_bias(m, T, n_nodes=129))
     # Uniform randomization buys roughly one extra power of 1/T.
     assert slope < -2.6
+
+
+def test_montecarlo_mean_matches_quadrature_bias():
+    # The sample mean over many random runtimes must agree with the
+    # deterministic (quadrature) bias to within a few standard errors.
+    m = SpinHalfLoop()
+    T = np.array([30.0, 60.0])
+    mean_err, sem, event_std = randomized_richardson_montecarlo(
+        m, T, n_shots=4000, seed=0
+    )
+    bias = randomized_richardson_bias(m, T, n_nodes=129)
+    assert np.all(np.abs(np.abs(mean_err) - bias) < 4.0 * sem + 1e-9)
+    # Per-event spread scales as ~T^-2: doubling T cuts it by ~4.
+    assert np.isclose(event_std[0] / event_std[1], 4.0, rtol=0.25)

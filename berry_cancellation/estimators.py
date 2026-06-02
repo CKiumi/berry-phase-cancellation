@@ -88,6 +88,55 @@ def richardson_error(model, T, alpha=2.0, steps=None):
     return np.abs(err_R)
 
 
+def _richardson_event_errors(model, t, x, alpha, steps):
+    """Per-event Richardson estimator errors for runtimes ``t * x``.
+
+    ``x`` is an array of runtime multipliers; returns ``theta_R(t x_j) - theta_B``
+    for each ``j`` (signed, wrapped to the mod-pi sector).  Forward/reverse
+    evolutions for both ``t x`` and ``alpha t x`` are batched into one sweep.
+    """
+    runtimes = t * np.asarray(x, float)
+    all_rt = np.concatenate([runtimes, alpha * runtimes])
+    theta = _theta_B_forward_reverse(model, all_rt, steps)
+    n = runtimes.shape[0]
+    err_T = wrap_to_half_pi(theta[:n] - model.berry_phase)
+    err_aT = wrap_to_half_pi(theta[n:] - model.berry_phase)
+    return (alpha**2 * err_aT - err_T) / (alpha**2 - 1.0)
+
+
+def randomized_richardson_montecarlo(
+    model, T, n_shots=10000, alpha=2.0, lam=0.5, seed=0, steps=None
+):
+    r"""Actual runtime randomization: sample-mean error over ``n_shots`` draws.
+
+    For each base runtime ``T`` we draw ``n_shots`` multipliers ``X_j`` uniformly
+    from ``[1 - lam, 1 + lam]``, evaluate the single-event Richardson estimator at
+    ``T_j = T X_j`` exactly (each draw is the infinite-measurement value), and
+    average.  Unlike :func:`randomized_richardson_bias` (which integrates the
+    expectation by quadrature), this is a real Monte Carlo sample mean and so
+    carries statistical fluctuation ``~ T^{-2} n_shots^{-1/2}``.
+
+    Returns ``(mean_error, sem, event_std)``: the signed sample-mean error
+    ``mean_j theta_R(T_j) - theta_B`` (wrapped), its standard error of the mean,
+    and the per-event standard deviation (whose ``/sqrt(n_shots)`` is the floor).
+    """
+    T = np.atleast_1d(np.asarray(T, float))
+    rng = np.random.default_rng(seed)
+    mean_err = np.empty(T.shape)
+    sem = np.empty(T.shape)
+    event_std = np.empty(T.shape)
+    for i, t in enumerate(T):
+        x = rng.uniform(1.0 - lam, 1.0 + lam, n_shots)
+        # Magnus is far more accurate than the ~T^-2 statistical floor we resolve,
+        # so a light step count (verified << floor) keeps the 10k-shot sweep fast.
+        steps_i = steps or int(max(1500, np.ceil(20.0 * alpha * t * (1.0 + lam))))
+        err = _richardson_event_errors(model, t, x, alpha, steps_i)
+        mean_err[i] = np.mean(err)
+        event_std[i] = np.std(err, ddof=1)
+        sem[i] = event_std[i] / np.sqrt(n_shots)
+    return mean_err, sem, event_std
+
+
 def randomized_richardson_bias(
     model, T, alpha=2.0, lam=0.5, n_nodes=257, steps=None
 ):

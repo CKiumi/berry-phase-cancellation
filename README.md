@@ -51,9 +51,15 @@ two-runtime Richardson extrapolant at `T` and `αT` removes the non-oscillatory
 `T_j = T·X`, `X ∈ [1−λ, 1+λ]`, suppresses the remaining oscillatory `T⁻²` term
 by one further power of `1/T`.
 
-The reported randomization curve is the **deterministic bias** `|E_X[θ̃_{B,R}] − θ_B|`
-(infinite-shot limit). A finite-shot run additionally carries a statistical floor
-`~ T⁻² N⁻¹/²` from the residual oscillatory sector.
+Two randomization quantities are computed:
+
+- **Deterministic bias** `|E_X[θ̃_{B,R}] − θ_B|` — the infinite-shot limit,
+  evaluated by quadrature over the runtime distribution. Scales as `T⁻³`.
+  (Shown in `fig_scaling.py`.)
+- **Actual Monte Carlo run** — draw `N` random runtimes `T_j = T·X_j`, evaluate
+  the single-event estimator at each, and average. The sample mean converges to
+  the bias but carries a statistical floor `~ T⁻² N⁻¹/²` from the residual
+  oscillatory sector. (Shown in `fig_randomization_montecarlo.py`, `N = 10000`.)
 
 ## Layout
 
@@ -64,8 +70,9 @@ berry_cancellation/
   reference.py      Wilson-loop Berry phase, dynamical phase, angle wrapping
   estimators.py     single / forward–reverse / Richardson / randomized errors
 experiments/
-  fig_scaling.py          main figure: error vs T for all four estimators
-  fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
+  fig_scaling.py                  main figure: error vs T for all four estimators
+  fig_spin_half_check.py          Berry phase vs analytic half-solid-angle
+  fig_randomization_montecarlo.py actual 10k-shot randomization: bias vs floor
 tests/
   test_cancellation.py    references, unitarity, integrator convergence, slopes
 ```
@@ -81,6 +88,7 @@ integrator error is verified to sit far below the adiabatic error it measures.
 uv sync                                     # set up the environment
 uv run python experiments/fig_scaling.py    # -> figures/scaling.png
 uv run python experiments/fig_spin_half_check.py
+uv run python experiments/fig_randomization_montecarlo.py  # ~3-4 min, 10k shots
 uv run pytest                               # checks references + scaling slopes
 ```
 
