@@ -31,7 +31,7 @@ from berry_cancellation.estimators import (
 
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 
-LAM = 0.5
+LAM = 0.7  # chosen by a roughness scan: smoothest curves while T^-4 slope stays faithful
 T_MAX = 50.0
 N_POINTS = 20
 
