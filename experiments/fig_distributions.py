@@ -43,14 +43,23 @@ def main() -> None:
     ]
 
     fig, ax = plt.subplots(figsize=(7.4, 5.4))
+    results = {}
     for label, kw, color, mk in curves:
         print(f"computing {label} ...")
         e = randomized_richardson_bias(model, T, alpha=alpha, lam=0.5, **kw)
+        results[label] = e
         ax.loglog(T, e, marker=mk, ms=4, color=color, label=label)
 
-    # Reference slopes.
-    for power, style in [(-3, ":"), (-4, "--"), (-6, "-.")]:
-        c = 0.7 * (T[0] ** -power) * (8.0 ** power)  # arbitrary offset near top-left
+    # Reference slopes, each anchored to its matching curve over the large-T
+    # (asymptotic) region so the guide sits on the data rather than floating.
+    tail = T > 30.0
+    refs = [
+        (-3, "uniform, 1 Richardson", ":"),
+        (-4, "triangle, 1 Richardson", "--"),
+        (-6, "bump, 2 Richardson", "-."),
+    ]
+    for power, key, style in refs:
+        c = np.median(results[key][tail] / T[tail] ** power)
         ax.loglog(T, c * T ** power, color="0.6", lw=1.0, linestyle=style,
                   label=rf"$\propto T^{{{power}}}$")
 
