@@ -110,7 +110,12 @@ def loop_amplitudes(model, T, steps: int):
         z_reverse = <psi0| \hat U_T(1) |psi0>  ~ exp(i(+theta_D + theta_B + phihat)).
 
     ``T`` may be a scalar or a 1-D array (batched).
+
+    If the model supplies its own ``amplitudes(T)`` (e.g. a many-body model with an
+    exact closed-form propagator), it is used directly and ``steps`` is ignored.
     """
+    if hasattr(model, "amplitudes"):
+        return model.amplitudes(T)
     psi0 = model.psi0
     U_fwd = propagator(model.H, T, steps, sign=+1.0)
     U_rev = propagator(model.H, T, steps, sign=-1.0)

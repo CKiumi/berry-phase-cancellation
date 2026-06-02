@@ -63,17 +63,40 @@ giving `T⁻⁴`). Note the extra power comes from the *smoother distribution*, 
 from an additional Richardson level: a second extrapolation does not help here
 because the oscillatory residual — not the non-oscillatory one — sets the floor.
 
+## Many-qubit model
+
+To show the cancellation isn't special to two levels, `manybody.py` provides a
+genuinely **entangled `N`-qubit** loop — a Heisenberg chain in a *spiral* rotating
+field,
+
+```
+H(s) = -Σᵢ Bᵢ(s)·Sᵢ + J Σ_⟨ij⟩ Sᵢ·Sⱼ,   Bᵢ(s) on the cone with offset φᵢ = 2πi/N.
+```
+
+The per-site offsets break the total-spin symmetry, so the ground state is
+entangled and the virtual-excitation term `𝒜⁽²⁾` (the `n,k≠0` sum) is **nonzero** —
+the piece a two-level or spin-`S` model can't exercise. Because every site's
+azimuth advances by the same `2πs`, the loop is the rigid rotation
+`H(s) = R(s)H(0)R(s)†`, which gives an exact closed-form propagator
+`U_T(1) = R(1)e^{−i(T H(0) − 2π Sᶻ_tot)}` (no integrator) and an analytic Berry
+phase `θ_B = 2π⟨Sᶻ_tot⟩₀` (cross-checked against the Wilson loop). `fig_manybody.py`
+runs the *same* estimators on this model (`N=4`) and reproduces the
+`T⁻¹ → T⁻² → T⁻⁴` cascade — confirming the cancellation in a real many-body state.
+
 ## Layout
 
 ```
 berry_cancellation/
   hamiltonians.py   spin-1/2 cone-loop model (H(s), ground state, analytic θ_B)
-  evolution.py      batched 4th-order Magnus propagator for 2×2 systems
+  manybody.py       non-trivial N-qubit model: Heisenberg chain in a spiral field
+  evolution.py      batched 4th-order Magnus propagator (+ dispatch to a model's
+                    own exact amplitudes, used by the many-body model)
   reference.py      Wilson-loop Berry phase, dynamical phase, angle wrapping
   estimators.py     single / forward–reverse / Richardson / randomized errors
 experiments/
   fig_scaling.py          main figure: error vs T for all four estimators
   fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
+  fig_manybody.py         same cancellation cascade on a 4-qubit entangled model
 tests/
   test_cancellation.py    references, unitarity, integrator convergence, slopes
 ```
@@ -89,6 +112,7 @@ integrator error is verified to sit far below the adiabatic error it measures.
 uv sync                                     # set up the environment
 uv run python experiments/fig_scaling.py    # -> figures/scaling.png
 uv run python experiments/fig_spin_half_check.py
+uv run python experiments/fig_manybody.py   # -> figures/manybody.png (4-qubit model)
 uv run pytest                               # checks references + scaling slopes
 ```
 
@@ -102,4 +126,4 @@ non-oscillatory `T⁻⁴` floor dominates → a smooth curve. With two levels th
 drops to `T⁻⁶`, which falls *below* the residual oscillation, so that curve is
 oscillation-dominated (the dips are sign changes). The worst-case runtime is
 `T(1+λ)αˡᵉᵛᵉˡˢ` (≈298 for 1 level, ≈521 for 2).
-# berry-phase-cancellation
+

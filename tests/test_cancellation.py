@@ -81,3 +81,19 @@ def test_triangle_randomization_reaches_T4():
     slope = _slope(T, randomized_richardson_bias(
         m, T, levels=1, dist="triangle", n_nodes=129))
     assert slope < -3.6
+
+
+def test_manybody_cancellation():
+    # The cancellation must also work in a non-trivial entangled many-qubit model.
+    from berry_cancellation.manybody import SpiralHeisenbergChain
+    m = SpiralHeisenbergChain(N=4, J=1.0, B0=1.0, theta=0.4 * np.pi)
+    # Non-degenerate ground state, and a non-trivial (not 0/pi) Berry phase that
+    # matches the gauge-invariant Wilson loop.
+    assert m.gap > 1e-3
+    diff = (berry_phase_wilson(m, n_points=2000) - m.berry_phase + np.pi) \
+        % (2 * np.pi) - np.pi
+    assert abs(diff) < 1e-4
+    # Forward-reverse cancels the leading O(T^-1) term: slope steepens past single.
+    T = np.geomspace(8.0, 80.0, 14)
+    assert _slope(T, single_phase_error(m, T)) > -1.4
+    assert _slope(T, forward_reverse_error(m, T)) < -1.6
