@@ -99,8 +99,11 @@ uv run pytest                               # checks references + scaling slopes
 `figures/scaling.png` is the headline plot (`T ∈ [8, 100]`, 20 points, `λ = 0.7`,
 chosen by a roughness scan as the smoothest while the `T⁻⁴` slope stays faithful):
 four curves whose log–log envelopes follow `T⁻¹` (single), `T⁻²` (forward–reverse),
-`T⁻⁴` (1 Richardson + bump randomization), and `T⁻⁶` (2 Richardson + bump
-randomization). The `C^∞` bump suppresses the oscillatory residual
-super-polynomially, so the bias is set by the non-oscillatory Richardson floor:
-one Richardson level gives `T⁻⁴`, two give `T⁻⁶`. See `fig_distributions.py` for
-the uniform/triangle/bump comparison and when a second Richardson level helps.
+and `T⁻⁴` (1 Richardson + triangle **and** 1 Richardson + bump randomization). One
+Richardson level cancels the non-oscillatory `T⁻²` term; a smooth runtime
+distribution suppresses the oscillatory residual *below* the resulting `T⁻⁴`
+non-oscillatory floor, so `T⁻⁴` is the leading, **observable**, non-oscillatory
+error. Triangle and bump both reach `T⁻⁴` (the bump suppresses the oscillation
+harder). A second Richardson level would give `T⁻⁶`, but that floor sits below the
+residual oscillation and machine precision, so it is not observable — see
+`fig_distributions.py`.
