@@ -11,7 +11,8 @@ step:
 | Single evolution | `O(T⁻¹)` | bare adiabatic phase error `φ` |
 | Forward–reverse | `O(T⁻²)` | evolve under `+H` then `−H`; cancels `θ_D` **and** the `O(T⁻¹)` term |
 | + Richardson (α=2) | `O(T⁻²)` | removes the non-oscillatory `T⁻²` part |
-| + runtime randomization | `O(T⁻³)` | averages out the oscillatory `T⁻²` residual |
+| + uniform randomization | `O(T⁻³)` | averages out the oscillatory `T⁻²` residual (CF `~ k⁻¹`) |
+| + triangle randomization | `O(T⁻⁴)` | smoother distribution (CF `~ k⁻²`) suppresses it one power further |
 
 Here `T` is the runtime (slower sweep = larger `T` = smaller error).
 
@@ -51,10 +52,15 @@ two-runtime Richardson extrapolant at `T` and `αT` removes the non-oscillatory
 `T_j = T·X`, `X ∈ [1−λ, 1+λ]`, suppresses the remaining oscillatory `T⁻²` term
 by one further power of `1/T`.
 
-The reported randomization curve is the **deterministic bias**
+The reported randomization curves are the **deterministic bias**
 `|E_X[θ̃_{B,R}] − θ_B|`, the infinite-shot limit evaluated by quadrature over the
-uniform runtime distribution. Uniform randomization removes the leading
-oscillatory `T⁻²` term in expectation, so the bias scales as `~ T⁻³`.
+runtime distribution. Richardson removes the non-oscillatory `T⁻²` term;
+averaging then suppresses the residual oscillatory `T⁻²` term by the decay of the
+distribution's characteristic function — one power of `1/T` for the **uniform**
+distribution (CF `~ k⁻¹`, giving `T⁻³`), two for the **triangle** (CF `~ k⁻²`,
+giving `T⁻⁴`). Note the extra power comes from the *smoother distribution*, not
+from an additional Richardson level: a second extrapolation does not help here
+because the oscillatory residual — not the non-oscillatory one — sets the floor.
 
 ## Layout
 
@@ -85,7 +91,9 @@ uv run python experiments/fig_spin_half_check.py
 uv run pytest                               # checks references + scaling slopes
 ```
 
-`figures/scaling.png` is the headline plot: four curves whose log–log envelopes
-follow `T⁻¹`, `T⁻²`, `T⁻²`, and `T⁻³`. The forward–reverse and Richardson curves
-oscillate under their `T⁻²` envelope because the residual oscillates at frequency
-`ω = ∫Δ ds`; runtime randomization averages this away.
+`figures/scaling.png` is the headline plot: curves whose log–log envelopes follow
+`T⁻¹` (single), `T⁻²` (forward–reverse, Richardson), `T⁻³` (uniform
+randomization), and `T⁻⁴` (triangle randomization). The forward–reverse and
+Richardson curves oscillate under their `T⁻²` envelope because the residual
+oscillates at frequency `ω = ∫Δ ds`; runtime randomization averages this away,
+the faster the smoother the distribution.

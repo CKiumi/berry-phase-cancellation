@@ -88,37 +88,80 @@ def richardson_error(model, T, alpha=2.0, steps=None):
     return np.abs(err_R)
 
 
+def _recursive_richardson_error(model, r, alpha, levels, steps):
+    r"""Error of the ``levels``-fold recursive Richardson forward--reverse estimate.
+
+    ``r`` is an array of base runtimes.  Evaluates the forward--reverse error at
+    ``r, alpha r, ..., alpha^levels r`` and recursively extrapolates: level ``j``
+    cancels the non-oscillatory ``T^{-2j}`` term using weight ``alpha^{2j}``.
+    Returns the extrapolated (signed, wrapped) error at base runtime ``r``.
+    """
+    r = np.asarray(r, float)
+    errs = []
+    for k in range(levels + 1):
+        theta = _theta_B_forward_reverse(model, alpha**k * r, steps)
+        errs.append(wrap_to_half_pi(theta - model.berry_phase))
+    for j in range(1, levels + 1):
+        a2j = alpha ** (2 * j)
+        errs = [(a2j * errs[k + 1] - errs[k]) / (a2j - 1.0)
+                for k in range(len(errs) - 1)]
+    return errs[0]
+
+
 def randomized_richardson_bias(
-    model, T, alpha=2.0, lam=0.5, n_nodes=257, steps=None
+    model, T, alpha=2.0, lam=0.5, levels=1, dist="uniform", n_nodes=129, steps=None
 ):
-    r"""Deterministic bias of the runtime-randomized Richardson estimator.
+    r"""Deterministic bias of the runtime-randomized recursive-Richardson estimator.
 
-    For each base runtime ``T`` the runtime is randomized as ``T_j = T X_j`` with
-    ``X`` uniform on ``[1 - lam, 1 + lam]``.  The reported quantity is the bias of
-    the *expected* estimator, ``|E_X[theta_R(T X)] - theta_B|``, evaluated by a
-    deterministic Simpson quadrature over the ``X`` support (i.e. the
-    infinite-shot limit, isolating the deterministic bias).  Uniform
-    randomization removes the leading oscillatory ``T^{-2}`` term in expectation,
-    giving ``O(T^{-3})``.
+    For each base runtime ``T`` the runtime is randomized as ``T_j = T X_j`` and
+    the ``levels``-fold recursive Richardson forward--reverse estimator is averaged
+    over ``X``.  Returns ``|E_X[theta_R(T X)] - theta_B|`` (the infinite-shot bias),
+    evaluated by Simpson quadrature over the distribution of ``X``.
 
-    The reported value is the *bias* only; an actual finite-shot run also carries
-    a statistical floor ``~ T^{-2} N^{-1/2}`` from the residual oscillatory
-    sector (see paper, Sec. on runtime randomization).
+    Two effects set the bias scaling:
+
+    * recursive Richardson cancels the non-oscillatory terms up to ``T^{-2 levels}``
+      (so the non-oscillatory residual is ``T^{-2(levels+1)}``);
+    * averaging suppresses the residual oscillatory ``T^{-2}`` term by the decay of
+      the distribution's characteristic function -- one power of ``1/T`` for the
+      ``uniform`` distribution (CF ``~ k^{-1}``), two for the ``triangle`` (CF
+      ``~ k^{-2}``).
+
+    Hence ``levels=1, dist='uniform'`` gives ``O(T^{-3})`` and
+    ``levels=2, dist='triangle'`` gives ``O(T^{-4})``.
+
+    Parameters
+    ----------
+    levels:
+        Number of recursive Richardson extrapolation levels (>= 1).
+    dist:
+        Runtime distribution on ``[1-lam, 1+lam]``: ``"uniform"`` or ``"triangle"``
+        (the triangle peaks at ``X=1``).
     """
     from scipy.integrate import simpson
 
     T = np.atleast_1d(np.asarray(T, float))
-    x = np.linspace(1.0 - lam, 1.0 + lam, n_nodes)
-    weight = 1.0 / (2.0 * lam)  # uniform density on [1-lam, 1+lam]
+
+    # Symmetric grid with the apex X=1 as a node; integrate each half separately
+    # so the triangle's kink at X=1 does not spoil Simpson's accuracy.
+    n_half = max(2, (n_nodes // 2)) // 2 * 2  # even, so each half has odd length
+    xl = np.linspace(1.0 - lam, 1.0, n_half + 1)
+    xr = np.linspace(1.0, 1.0 + lam, n_half + 1)
+    x = np.concatenate([xl, xr[1:]])
+    if dist == "uniform":
+        dens = np.full_like(x, 1.0 / (2.0 * lam))
+    elif dist == "triangle":
+        dens = (1.0 - np.abs(x - 1.0) / lam) / lam
+    else:
+        raise ValueError(f"unknown dist {dist!r}")
 
     bias = np.empty(T.shape)
     for i, t in enumerate(T):
-        runtimes = t * x
-        steps_i = steps or default_steps(alpha * runtimes.max())
-        theta_T = _theta_B_forward_reverse(model, runtimes, steps_i)
-        theta_aT = _theta_B_forward_reverse(model, alpha * runtimes, steps_i)
-        err_T = wrap_to_half_pi(theta_T - model.berry_phase)
-        err_aT = wrap_to_half_pi(theta_aT - model.berry_phase)
-        err_R = (alpha**2 * err_aT - err_T) / (alpha**2 - 1.0)
-        bias[i] = np.abs(simpson(err_R * weight, x=x))
+        r = t * x
+        steps_i = steps or default_steps(alpha**levels * r.max())
+        err_R = _recursive_richardson_error(model, r, alpha, levels, steps_i)
+        integrand = err_R * dens
+        val = (simpson(integrand[:n_half + 1], x=x[:n_half + 1])
+               + simpson(integrand[n_half:], x=x[n_half:]))
+        bias[i] = np.abs(val)
     return bias
