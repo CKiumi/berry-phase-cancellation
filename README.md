@@ -102,3 +102,4 @@ non-oscillatory `T⁻⁴` floor dominates → a smooth curve. With two levels th
 drops to `T⁻⁶`, which falls *below* the residual oscillation, so that curve is
 oscillation-dominated (the dips are sign changes). The worst-case runtime is
 `T(1+λ)αˡᵉᵛᵉˡˢ` (≈298 for 1 level, ≈521 for 2).
+# berry-phase-cancellation
