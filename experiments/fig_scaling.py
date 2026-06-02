@@ -32,6 +32,8 @@ from berry_cancellation.estimators import (
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 
 LAM = 0.7  # chosen by a roughness scan: smoothest curves while T^-4 slope stays faithful
+ALPHA = 2.0  # Richardson step ratio; also the smoothness optimum. Larger -> smoother
+             # 1R curve but worst runtime grows as alpha^levels; smaller -> rougher.
 T_MAX = 50.0
 N_POINTS = 20
 
@@ -42,7 +44,7 @@ def main() -> None:
           f"gap={model.gap}, theta_B={model.berry_phase:.6f}")
 
     T = np.geomspace(8.0, T_MAX, N_POINTS)
-    alpha = 2.0
+    alpha = ALPHA
 
     print("computing single-evolution phase error ...")
     e_single = single_phase_error(model, T)
