@@ -53,7 +53,7 @@ def main() -> None:
     ax.loglog(T, e_fr, "s-", ms=4, label=r"forward--reverse")
     ax.loglog(T, e_rich, "^-", ms=4, label=r"+ Richardson ($\alpha=2$)")
     ax.loglog(T, e_rand, "d-", ms=4, color="C3",
-              label=r"+ runtime randomization (bias)")
+              label=r"+ runtime randomization (mean error)")
 
     # Reference power-law guides, anchored at the asymptotic (large-T) end, since
     # the small-T points are outside the regime where the 1/T expansion holds.
