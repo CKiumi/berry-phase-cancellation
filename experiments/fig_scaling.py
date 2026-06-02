@@ -42,7 +42,9 @@ def main() -> None:
     print("computing forward--reverse error ...")
     e_fr = forward_reverse_error(model, T)
     print("computing Richardson error ...")
-    e_rich = richardson_error(model, T, alpha=alpha)
+    # Richardson uses a doubly-dense grid to resolve its faster oscillation.
+    T_rich = np.geomspace(8.0, 100.0, 160)
+    e_rich = richardson_error(model, T_rich, alpha=alpha)
     # Runtime-randomized Richardson bias |E_X[theta_R] - theta_B| by quadrature.
     # Richardson removes the non-oscillatory T^-2 term; averaging suppresses the
     # oscillatory residual by the decay of the distribution's characteristic
@@ -54,7 +56,7 @@ def main() -> None:
     fig, ax = plt.subplots(figsize=(7.0, 5.2))
     ax.loglog(T, e_single, "o-", ms=4, label=r"single evolution  $|\varphi|$")
     ax.loglog(T, e_fr, "s-", ms=4, label=r"forward--reverse")
-    ax.loglog(T, e_rich, "^-", ms=4, label=r"+ Richardson ($\alpha=2$)")
+    ax.loglog(T_rich, e_rich, "^-", ms=4, label=r"+ Richardson ($\alpha=2$)")
     ax.loglog(T, e_rand_t, "v-", ms=4, color="C4",
               label=r"+ triangle randomization")
 
