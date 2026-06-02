@@ -142,8 +142,12 @@ def randomized_richardson_bias(
     levels:
         Number of recursive Richardson extrapolation levels (>= 1).
     dist:
-        Runtime distribution on ``[1-lam, 1+lam]``: ``"uniform"`` or ``"triangle"``
-        (the triangle peaks at ``X=1``).
+        Runtime distribution on ``[1-lam, 1+lam]``: ``"uniform"`` (CF ``~ k^-1``,
+        oscillatory bias ``T^-3``), ``"triangle"`` (CF ``~ k^-2``, ``T^-4``), or
+        ``"bump"`` -- a ``C^inf`` bump whose CF decays faster than any power, so
+        the oscillatory residual is suppressed super-polynomially and the bias is
+        set by the *non-oscillatory* Richardson residual ``T^-2(levels+1)``
+        (smooth, non-oscillating).
     """
     from scipy.integrate import simpson
 
@@ -151,7 +155,7 @@ def randomized_richardson_bias(
 
     # Symmetric grid with the apex X=1 as a node; integrate each half separately
     # so the triangle's kink at X=1 does not spoil Simpson's accuracy.
-    if dist not in ("uniform", "triangle"):
+    if dist not in ("uniform", "triangle", "bump"):
         raise ValueError(f"unknown dist {dist!r}")
 
     # The integrand oscillates in X at frequency ~ omega * alpha^levels * t (omega
@@ -170,8 +174,16 @@ def randomized_richardson_bias(
         x = np.concatenate([xl, xr[1:]])
         if dist == "uniform":
             dens = np.full_like(x, 1.0 / (2.0 * lam))
-        else:
+        elif dist == "triangle":
             dens = (1.0 - np.abs(x - 1.0) / lam) / lam
+        else:  # C^inf bump, exp(-1/(1-u^2)) on |u|<1, normalised on the grid
+            u = (x - 1.0) / lam
+            dens = np.zeros_like(x)
+            inside = np.abs(u) < 1.0
+            dens[inside] = np.exp(-1.0 / (1.0 - u[inside] ** 2))
+            Z = (simpson(dens[:n_half + 1], x=x[:n_half + 1])
+                 + simpson(dens[n_half:], x=x[n_half:]))
+            dens /= Z
 
         r = t * x
         steps_i = steps or default_steps(alpha**levels * r.max())
