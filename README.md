@@ -13,6 +13,7 @@ step:
 | + Richardson (α=2) | `O(T⁻²)` | removes the non-oscillatory `T⁻²` part |
 | + uniform randomization | `O(T⁻³)` | averages out the oscillatory `T⁻²` residual (CF `~ k⁻¹`) |
 | + triangle randomization | `O(T⁻⁴)` | smoother distribution (CF `~ k⁻²`) suppresses it one power further |
+| 2 Richardson + bump randomization | `O(T⁻⁶)` | `C^∞` bump kills the oscillatory residual super-polynomially; the 2nd Richardson lowers the non-oscillatory floor to `T⁻⁶` |
 
 Here `T` is the runtime (slower sweep = larger `T` = smaller error).
 
@@ -93,11 +94,11 @@ uv run python experiments/fig_spin_half_check.py
 uv run pytest                               # checks references + scaling slopes
 ```
 
-`figures/scaling.png` is the headline plot: curves whose log–log envelopes follow
-`T⁻¹` (single), `T⁻²` (forward–reverse, Richardson), and `T⁻⁴` (triangle
-randomization). The forward–reverse and Richardson curves oscillate under their
-`T⁻²` envelope because the residual oscillates at frequency `ω = ∫Δ ds`; the
-triangle-distribution randomization averages this away to `T⁻⁴`. (Uniform
-randomization gives `T⁻³` — still oscillatory, since averaging only suppresses
-the oscillatory residual by one power; it is available via the `dist` argument
-but omitted from the plot.)
+`figures/scaling.png` is the headline plot (`T ∈ [8, 50]`, `λ = 0.5`): five curves
+whose log–log envelopes follow `T⁻¹` (single), `T⁻²` (forward–reverse and
+1 Richardson), `T⁻⁴` (1 Richardson + triangle randomization), and `T⁻⁶`
+(2 Richardson + bump randomization). The forward–reverse and Richardson curves
+oscillate under their `T⁻²` envelope because the residual oscillates at frequency
+`ω = ∫Δ ds`; a smoother runtime distribution averages this away faster. See
+`fig_distributions.py` for the uniform/triangle/bump comparison and the
+explanation of when a second Richardson level helps.

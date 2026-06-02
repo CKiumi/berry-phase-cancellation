@@ -1,11 +1,15 @@
-r"""Main figure: adiabatic error vs runtime ``T`` for the four estimators.
+r"""Main figure: adiabatic error vs runtime ``T`` on the spin-1/2 cone loop.
 
-Reproduces the central claim of the paper on the spin-1/2 cone loop:
+    single evolution                  ~ O(T^-1)
+    forward--reverse                  ~ O(T^-2)   (oscillatory)
+    1 Richardson                      ~ O(T^-2)   (oscillatory, smaller constant)
+    1 Richardson + triangle random.   ~ O(T^-4)
+    2 Richardson + bump  random.      ~ O(T^-6)   (large-T envelope)
 
-    single evolution         ~ O(T^-1)
-    forward--reverse         ~ O(T^-2)   (oscillatory)
-    + Richardson             ~ O(T^-2)   (oscillatory, smaller constant)
-    + runtime randomization  ~ O(T^-3)   (deterministic bias)
+All randomization uses lam = 0.5. Richardson cancels the non-oscillatory terms;
+a smoother runtime distribution suppresses the oscillatory residual faster (the
+triangle's CF ~ k^-2, the C^inf bump's faster than any power), and the bump only
+pays off once a second Richardson level has pushed the non-oscillatory floor down.
 
 Run with:  uv run python experiments/fig_scaling.py
 Writes:    figures/scaling.png
@@ -28,13 +32,16 @@ from berry_cancellation.estimators import (
 
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 
+LAM = 0.5
+T_MAX = 50.0
+
 
 def main() -> None:
     model = SpinHalfLoop()
     print(f"model: spin-1/2 cone loop, theta0={model.theta0:.4f}, "
           f"gap={model.gap}, theta_B={model.berry_phase:.6f}")
 
-    T = np.geomspace(8.0, 100.0, 80)
+    T = np.geomspace(8.0, T_MAX, 80)
     alpha = 2.0
 
     print("computing single-evolution phase error ...")
@@ -43,35 +50,40 @@ def main() -> None:
     e_fr = forward_reverse_error(model, T)
     print("computing Richardson error ...")
     # Richardson uses a doubly-dense grid to resolve its faster oscillation.
-    T_rich = np.geomspace(8.0, 100.0, 160)
+    T_rich = np.geomspace(8.0, T_MAX, 160)
     e_rich = richardson_error(model, T_rich, alpha=alpha)
-    # Runtime-randomized Richardson bias |E_X[theta_R] - theta_B| by quadrature.
-    # Richardson removes the non-oscillatory T^-2 term; averaging suppresses the
-    # oscillatory residual by the decay of the distribution's characteristic
-    # function: uniform (CF ~ k^-1) -> T^-3, triangle (CF ~ k^-2) -> T^-4.
-    print("computing runtime-randomized bias (triangle) ...")
-    e_rand_t = randomized_richardson_bias(model, T, alpha=alpha, lam=0.5,
-                                          levels=1, dist="triangle", n_nodes=129)
+    print("computing 1 Richardson + triangle randomization ...")
+    e_tri = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
+                                       levels=1, dist="triangle", n_nodes=129)
+    print("computing 2 Richardson + bump randomization ...")
+    e_bump = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
+                                        levels=2, dist="bump", n_nodes=129)
 
-    fig, ax = plt.subplots(figsize=(7.0, 5.2))
-    ax.loglog(T, e_single, "o-", ms=4, label=r"single evolution  $|\varphi|$")
-    ax.loglog(T, e_fr, "s-", ms=4, label=r"forward--reverse")
-    ax.loglog(T_rich, e_rich, "^-", ms=4, label=r"+ Richardson ($\alpha=2$)")
-    ax.loglog(T, e_rand_t, "v-", ms=4, color="C4",
-              label=r"+ triangle randomization")
+    fig, ax = plt.subplots(figsize=(7.2, 5.4))
+    ax.loglog(T, e_single, "o-", ms=4, color="C0",
+              label=r"single evolution  $|\varphi|$")
+    ax.loglog(T, e_fr, "s-", ms=4, color="C1", label=r"forward--reverse")
+    ax.loglog(T_rich, e_rich, "^-", ms=4, color="C2",
+              label=r"1 Richardson ($\alpha=2$)")
+    ax.loglog(T, e_tri, "v-", ms=4, color="C4",
+              label=r"1 Richardson + triangle")
+    ax.loglog(T, e_bump, "D-", ms=4, color="C3",
+              label=r"2 Richardson + bump")
 
-    # Reference power-law guides, anchored through the median of each (oscillatory)
-    # curve so the slope line sits in the data cloud rather than at an endpoint.
+    # Reference slopes, anchored through the median of each curve over the upper
+    # (more asymptotic) half so the guide sits on the data.
+    tail = T >= np.sqrt(8.0 * T_MAX)
     for power, e, style in [
         (-1, e_single, ":"),
         (-2, e_fr, "--"),
-        (-4, e_rand_t, (0, (5, 1))),
+        (-4, e_tri, (0, (5, 1))),
+        (-6, e_bump, "-."),
     ]:
-        c = np.median(e / T**power)
-        ax.loglog(T, c * T**power, color="0.5", lw=1.0, linestyle=style,
+        c = np.median(e[tail] / T[tail] ** power)
+        ax.loglog(T, c * T ** power, color="0.55", lw=1.0, linestyle=style,
                   label=rf"$\propto T^{{{power}}}$")
 
-    ax.set_xlim(7.0, 115.0)
+    ax.set_xlim(7.0, T_MAX * 1.15)
     ax.set_xlabel("runtime $T$")
     ax.set_ylabel(r"phase error  $|\tilde\theta_B - \theta_B|$  (rad)")
     ax.set_title("Adiabatic error cancellation in Berry phase estimation\n"
