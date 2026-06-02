@@ -34,7 +34,7 @@ def main() -> None:
     print(f"runtime randomization: uniform on [{1-LAM}, {1+LAM}], "
           f"N={N_SHOTS} shots, alpha={ALPHA}")
 
-    T = np.geomspace(1.0, 150.0, 20)
+    T = np.geomspace(8.0, 150.0, 16)
     print("running Monte Carlo sweep over T ...")
     # sem == std of the N-shot randomized estimate (sigma_N).
     _, sigma_N, _ = randomized_richardson_montecarlo(
@@ -48,7 +48,7 @@ def main() -> None:
     ax.loglog(T, sigma_N[-1] * (T / T[-1]) ** -2, "--", color="0.5", lw=1.0,
               label=r"$\propto T^{-2}$")
 
-    ax.set_xlim(0.9, 170.0)
+    ax.set_xlim(7.0, 170.0)
     ax.set_xlabel("runtime $T$")
     ax.set_ylabel(r"std of $\tilde\theta_{B,R}$  (rad)")
     ax.set_title(f"Runtime randomization: estimator standard deviation "
