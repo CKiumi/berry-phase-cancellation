@@ -94,11 +94,10 @@ uv run python experiments/fig_spin_half_check.py
 uv run pytest                               # checks references + scaling slopes
 ```
 
-`figures/scaling.png` is the headline plot (`T ∈ [8, 50]`, `λ = 0.5`): five curves
-whose log–log envelopes follow `T⁻¹` (single), `T⁻²` (forward–reverse and
-1 Richardson), `T⁻⁴` (1 Richardson + triangle randomization), and `T⁻⁶`
-(2 Richardson + bump randomization). The forward–reverse and Richardson curves
-oscillate under their `T⁻²` envelope because the residual oscillates at frequency
-`ω = ∫Δ ds`; a smoother runtime distribution averages this away faster. See
-`fig_distributions.py` for the uniform/triangle/bump comparison and the
-explanation of when a second Richardson level helps.
+`figures/scaling.png` is the headline plot (`T ∈ [8, 50]`, 20 points, `λ = 0.5`):
+four curves whose log–log envelopes follow `T⁻¹` (single), `T⁻²` (forward–reverse),
+`T⁻⁴` (1 Richardson + bump randomization), and `T⁻⁶` (2 Richardson + bump
+randomization). The `C^∞` bump suppresses the oscillatory residual
+super-polynomially, so the bias is set by the non-oscillatory Richardson floor:
+one Richardson level gives `T⁻⁴`, two give `T⁻⁶`. See `fig_distributions.py` for
+the uniform/triangle/bump comparison and when a second Richardson level helps.
