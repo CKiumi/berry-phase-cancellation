@@ -79,6 +79,9 @@ class SpiralHeisenbergChain:
         self.E = E
         self.E0 = float(E[0])
         self.gap = float(E[1] - E[0])
+        # Fastest oscillation in the loop amplitude is set by the full spectral
+        # width; the randomization quadrature uses this to choose its node count.
+        self.osc_freq = float(E[-1] - E[0])
         self.psi0 = V[:, 0]
         # Global factor R(1) = exp(-i 2 pi S^z_tot) (= I for even N).
         self._R1 = expm(-1j * 2.0 * np.pi * self.Sz_tot)

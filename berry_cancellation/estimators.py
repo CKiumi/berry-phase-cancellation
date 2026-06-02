@@ -158,11 +158,12 @@ def randomized_richardson_bias(
     if dist not in ("uniform", "triangle", "bump"):
         raise ValueError(f"unknown dist {dist!r}")
 
-    # The integrand oscillates in X at frequency ~ omega * alpha^levels * t (omega
-    # is the integrated gap), so the number of quadrature nodes must grow with t to
-    # keep enough samples per oscillation -- otherwise the small high-T bias is
-    # swamped by Simpson error (a spurious upward spike).
-    omega = float(getattr(model, "gap", 1.0))
+    # The integrand oscillates in X at frequencies up to ~ (spectral width) *
+    # alpha^levels * t, so the number of quadrature nodes must grow with t to keep
+    # enough samples per oscillation -- otherwise the small high-T bias is swamped
+    # by Simpson aliasing (a spurious upward spike). Use the fastest frequency
+    # available (spectral width / largest gap), falling back to the gap.
+    omega = float(getattr(model, "osc_freq", getattr(model, "gap", 1.0)))
 
     bias = np.empty(T.shape)
     for i, t in enumerate(T):
