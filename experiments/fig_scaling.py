@@ -21,12 +21,14 @@ import numpy as np
 from berry_cancellation import SpinHalfLoop
 from berry_cancellation.estimators import (
     forward_reverse_error,
-    randomized_richardson_bias,
+    randomized_richardson_montecarlo,
     richardson_error,
     single_phase_error,
 )
 
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
+
+N_SHOTS = 10000
 
 
 def main() -> None:
@@ -43,14 +45,22 @@ def main() -> None:
     e_fr = forward_reverse_error(model, T)
     print("computing Richardson error ...")
     e_rich = richardson_error(model, T, alpha=alpha)
-    print("computing runtime-randomized Richardson bias ...")
-    e_rand = randomized_richardson_bias(model, T, alpha=alpha, lam=0.5, n_nodes=129)
+    # Real runtime randomization (Monte Carlo) on a coarser grid -- N=10000 shots
+    # per base T is the expensive curve, so it uses fewer T points.
+    T_rand = np.geomspace(8.0, 150.0, 13)
+    print(f"running real runtime randomization (N={N_SHOTS} shots) ...")
+    e_rand, e_rand_sem, _ = randomized_richardson_montecarlo(
+        model, T_rand, n_shots=N_SHOTS, alpha=alpha, lam=0.5, seed=0
+    )
+    e_rand = np.abs(e_rand)
 
     fig, ax = plt.subplots(figsize=(7.0, 5.2))
     ax.loglog(T, e_single, "o-", ms=4, label=r"single evolution  $|\varphi|$")
     ax.loglog(T, e_fr, "s-", ms=4, label=r"forward--reverse")
     ax.loglog(T, e_rich, "^-", ms=4, label=r"+ Richardson ($\alpha=2$)")
-    ax.loglog(T, e_rand, "d-", ms=4, label=r"+ runtime randomization (bias)")
+    ax.errorbar(T_rand, e_rand, yerr=e_rand_sem, fmt="d", ms=5, capsize=2,
+                color="C3",
+                label=rf"+ runtime randomization ($N={N_SHOTS}$)")
 
     # Reference power-law guides, anchored at the left edge of each curve.
     T0 = T[0]
