@@ -34,7 +34,7 @@ FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 LAM = 0.7  # chosen by a roughness scan: smoothest curves while T^-4 slope stays faithful
 ALPHA = 2.0  # Richardson step ratio; also the smoothness optimum. Larger -> smoother
              # 1R curve but worst runtime grows as alpha^levels; smaller -> rougher.
-T_MAX = 50.0
+T_MAX = 100.0
 N_POINTS = 20
 
 

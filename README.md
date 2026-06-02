@@ -94,7 +94,7 @@ uv run python experiments/fig_spin_half_check.py
 uv run pytest                               # checks references + scaling slopes
 ```
 
-`figures/scaling.png` is the headline plot (`T ∈ [8, 50]`, 20 points, `λ = 0.7`,
+`figures/scaling.png` is the headline plot (`T ∈ [8, 100]`, 20 points, `λ = 0.7`,
 chosen by a roughness scan as the smoothest while the `T⁻⁴` slope stays faithful):
 four curves whose log–log envelopes follow `T⁻¹` (single), `T⁻²` (forward–reverse),
 `T⁻⁴` (1 Richardson + bump randomization), and `T⁻⁶` (2 Richardson + bump
