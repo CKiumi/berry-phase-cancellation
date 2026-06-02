@@ -38,19 +38,19 @@ def default_steps(T_max: float) -> int:
     return int(max(1000, np.ceil(20.0 * T_max)))
 
 
-def single_phase_error(model, T, steps=None, signed=False):
+def single_phase_error(model, T, steps=None):
     r"""Single-evolution phase error ``|phi|``, expected ``~ O(T^{-1})``.
 
     The forward eigenphase is ``arg z_fwd = -theta_D + theta_B + phi``.  Granting
     exact knowledge of ``theta_D`` and ``theta_B``, the residual is the phase
-    error ``phi`` itself.  With ``signed=True`` the signed ``phi`` is returned.
+    error ``phi`` itself.
     """
     T = np.atleast_1d(np.asarray(T, float))
     steps = steps or default_steps(T.max())
     z_fwd, _ = loop_amplitudes(model, T, steps)
     theta_D = np.array([dynamical_phase(model, t) for t in T])
     phi = wrap_to_pi(np.angle(z_fwd) - (-theta_D + model.berry_phase))
-    return phi if signed else np.abs(phi)
+    return np.abs(phi)
 
 
 def _theta_B_forward_reverse(model, T, steps):
@@ -63,16 +63,12 @@ def _theta_B_forward_reverse(model, T, steps):
     return 0.5 * (np.angle(z_fwd) + np.angle(z_rev))
 
 
-def forward_reverse_error(model, T, steps=None, signed=False):
-    r"""Forward--reverse estimator error, expected ``~ O(T^{-2})``.
-
-    With ``signed=True`` the signed (wrapped) error is returned.
-    """
+def forward_reverse_error(model, T, steps=None):
+    r"""Forward--reverse estimator error, expected ``~ O(T^{-2})``."""
     T = np.atleast_1d(np.asarray(T, float))
     steps = steps or default_steps(T.max())
     theta_est = _theta_B_forward_reverse(model, T, steps)
-    err = wrap_to_half_pi(theta_est - model.berry_phase)
-    return err if signed else np.abs(err)
+    return np.abs(wrap_to_half_pi(theta_est - model.berry_phase))
 
 
 def richardson_error(model, T, alpha=2.0, steps=None):
@@ -120,8 +116,7 @@ def _recursive_richardson_error(model, r, alpha, levels, steps):
 
 
 def randomized_richardson_bias(
-    model, T, alpha=2.0, lam=0.5, levels=1, dist="uniform", n_nodes=129, steps=None,
-    signed=False,
+    model, T, alpha=2.0, lam=0.5, levels=1, dist="uniform", n_nodes=129, steps=None
 ):
     r"""Deterministic bias of the runtime-randomized recursive-Richardson estimator.
 
@@ -196,5 +191,5 @@ def randomized_richardson_bias(
         integrand = err_R * dens
         val = (simpson(integrand[:n_half + 1], x=x[:n_half + 1])
                + simpson(integrand[n_half:], x=x[n_half:]))
-        bias[i] = val
-    return bias if signed else np.abs(bias)
+        bias[i] = np.abs(val)
+    return bias

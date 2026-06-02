@@ -9,7 +9,7 @@ Each Richardson level cancels the next non-oscillatory term (T^-2, then T^-4); t
 C^inf bump distribution suppresses the oscillatory residual super-polynomially.
 With 1 level the non-oscillatory T^-4 floor dominates (smooth); with 2 levels the
 floor drops to T^-6, which falls below the residual oscillation, so that curve is
-oscillation-dominated (sign changes -> dips). See fig_distributions.py.
+oscillation-dominated (sign changes -> dips).
 
 Run with:  uv run python experiments/fig_scaling.py
 Writes:    figures/scaling.png

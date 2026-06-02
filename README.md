@@ -74,10 +74,6 @@ berry_cancellation/
 experiments/
   fig_scaling.py          main figure: error vs T for all four estimators
   fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
-  fig_scaling_signed.py   signed error (no abs) on a symlog axis -- shows the
-                          |error| "spikes" are smooth sign changes
-  fig_distributions.py    randomization bias for uniform/triangle/bump + recursive
-                          Richardson (shows when an extra Richardson level helps)
 tests/
   test_cancellation.py    references, unitarity, integrator convergence, slopes
 ```
@@ -104,6 +100,5 @@ level cancels the next non-oscillatory term; the bump (CF decays faster than any
 power) suppresses the oscillatory residual super-polynomially. With one level the
 non-oscillatory `T⁻⁴` floor dominates → a smooth curve. With two levels the floor
 drops to `T⁻⁶`, which falls *below* the residual oscillation, so that curve is
-oscillation-dominated (the dips are sign changes — see `fig_scaling_signed.py`).
-The worst-case runtime is `T(1+λ)αˡᵉᵛᵉˡˢ` (≈298 for 1 level, ≈521 for 2). See
-`fig_distributions.py` for the uniform/triangle/bump comparison.
+oscillation-dominated (the dips are sign changes). The worst-case runtime is
+`T(1+λ)αˡᵉᵛᵉˡˢ` (≈298 for 1 level, ≈521 for 2).
