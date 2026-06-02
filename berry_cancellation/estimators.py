@@ -144,19 +144,28 @@ def randomized_richardson_bias(
 
     # Symmetric grid with the apex X=1 as a node; integrate each half separately
     # so the triangle's kink at X=1 does not spoil Simpson's accuracy.
-    n_half = max(2, (n_nodes // 2)) // 2 * 2  # even, so each half has odd length
-    xl = np.linspace(1.0 - lam, 1.0, n_half + 1)
-    xr = np.linspace(1.0, 1.0 + lam, n_half + 1)
-    x = np.concatenate([xl, xr[1:]])
-    if dist == "uniform":
-        dens = np.full_like(x, 1.0 / (2.0 * lam))
-    elif dist == "triangle":
-        dens = (1.0 - np.abs(x - 1.0) / lam) / lam
-    else:
+    if dist not in ("uniform", "triangle"):
         raise ValueError(f"unknown dist {dist!r}")
+
+    # The integrand oscillates in X at frequency ~ omega * alpha^levels * t (omega
+    # is the integrated gap), so the number of quadrature nodes must grow with t to
+    # keep enough samples per oscillation -- otherwise the small high-T bias is
+    # swamped by Simpson error (a spurious upward spike).
+    omega = float(getattr(model, "gap", 1.0))
 
     bias = np.empty(T.shape)
     for i, t in enumerate(T):
+        phase_span = omega * (alpha**levels) * t * (2.0 * lam)
+        n_target = max(n_nodes, int(np.ceil(phase_span / (2.0 * np.pi) * 16)))
+        n_half = min(8192, max(2, n_target // 2)) // 2 * 2  # even -> odd half-grids
+        xl = np.linspace(1.0 - lam, 1.0, n_half + 1)
+        xr = np.linspace(1.0, 1.0 + lam, n_half + 1)
+        x = np.concatenate([xl, xr[1:]])
+        if dist == "uniform":
+            dens = np.full_like(x, 1.0 / (2.0 * lam))
+        else:
+            dens = (1.0 - np.abs(x - 1.0) / lam) / lam
+
         r = t * x
         steps_i = steps or default_steps(alpha**levels * r.max())
         err_R = _recursive_richardson_error(model, r, alpha, levels, steps_i)
