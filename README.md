@@ -74,6 +74,8 @@ berry_cancellation/
 experiments/
   fig_scaling.py          main figure: error vs T for all four estimators
   fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
+  fig_scaling_signed.py   signed error (no abs) on a symlog axis -- shows the
+                          |error| "spikes" are smooth sign changes
   fig_distributions.py    randomization bias for uniform/triangle/bump + recursive
                           Richardson (shows when an extra Richardson level helps)
 tests/
