@@ -34,7 +34,7 @@ def main() -> None:
     print(f"model: spin-1/2 cone loop, theta0={model.theta0:.4f}, "
           f"gap={model.gap}, theta_B={model.berry_phase:.6f}")
 
-    T = np.geomspace(8.0, 200.0, 80)
+    T = np.geomspace(8.0, 100.0, 80)
     alpha = 2.0
 
     print("computing single-evolution phase error ...")
@@ -75,7 +75,7 @@ def main() -> None:
         ax.loglog(T, c * T**power, color="0.5", lw=1.0, linestyle=style,
                   label=rf"$\propto T^{{{power}}}$")
 
-    ax.set_xlim(7.0, 230.0)
+    ax.set_xlim(7.0, 115.0)
     ax.set_xlabel("runtime $T$")
     ax.set_ylabel(r"phase error  $|\tilde\theta_B - \theta_B|$  (rad)")
     ax.set_title("Adiabatic error cancellation in Berry phase estimation\n"

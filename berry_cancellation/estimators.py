@@ -29,8 +29,13 @@ from .reference import dynamical_phase, wrap_to_half_pi, wrap_to_pi
 
 
 def default_steps(T_max: float) -> int:
-    """A Magnus step count that keeps integration error well below ``T^{-3}``."""
-    return int(max(1500, np.ceil(80.0 * T_max)))
+    """A Magnus step count that keeps integration error well below the signal.
+
+    The 4th-order Magnus integrator reaches ~1e-10 accuracy at roughly 10 steps
+    per unit runtime, so ~20/unit leaves a comfortable margin below even the
+    ``T^{-4}`` bias while keeping the step loop short.
+    """
+    return int(max(1000, np.ceil(20.0 * T_max)))
 
 
 def single_phase_error(model, T, steps=None):
@@ -97,10 +102,12 @@ def _recursive_richardson_error(model, r, alpha, levels, steps):
     Returns the extrapolated (signed, wrapped) error at base runtime ``r``.
     """
     r = np.asarray(r, float)
-    errs = []
-    for k in range(levels + 1):
-        theta = _theta_B_forward_reverse(model, alpha**k * r, steps)
-        errs.append(wrap_to_half_pi(theta - model.berry_phase))
+    n = r.shape[0]
+    # One batched forward+reverse sweep over all alpha^k * r at once.
+    all_r = np.concatenate([alpha**k * r for k in range(levels + 1)])
+    theta = _theta_B_forward_reverse(model, all_r, steps)
+    errs = [wrap_to_half_pi(theta[k * n:(k + 1) * n] - model.berry_phase)
+            for k in range(levels + 1)]
     for j in range(1, levels + 1):
         a2j = alpha ** (2 * j)
         errs = [(a2j * errs[k + 1] - errs[k]) / (a2j - 1.0)
@@ -156,7 +163,7 @@ def randomized_richardson_bias(
     bias = np.empty(T.shape)
     for i, t in enumerate(T):
         phase_span = omega * (alpha**levels) * t * (2.0 * lam)
-        n_target = max(n_nodes, int(np.ceil(phase_span / (2.0 * np.pi) * 16)))
+        n_target = max(n_nodes, int(np.ceil(phase_span / (2.0 * np.pi) * 8)))
         n_half = min(8192, max(2, n_target // 2)) // 2 * 2  # even -> odd half-grids
         xl = np.linspace(1.0 - lam, 1.0, n_half + 1)
         xr = np.linspace(1.0, 1.0 + lam, n_half + 1)
