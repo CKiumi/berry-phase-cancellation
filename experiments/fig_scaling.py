@@ -1,17 +1,15 @@
 r"""Main figure: adiabatic error vs runtime ``T`` on the spin-1/2 cone loop.
 
-    single evolution                 ~ O(T^-1)
-    forward--reverse                 ~ O(T^-2)   (oscillatory)
-    1 Richardson + triangle random.  ~ O(T^-4)
-    1 Richardson + bump  random.     ~ O(T^-4)   (smoother)
+    single evolution              ~ O(T^-1)
+    forward--reverse              ~ O(T^-2)   (oscillatory)
+    1 Richardson + bump random.   ~ O(T^-4)
 
 One Richardson level cancels the non-oscillatory T^-2 term, leaving a
-non-oscillatory T^-4 floor; a smooth runtime distribution (triangle: CF ~ k^-2;
-C^inf bump: faster than any power) suppresses the oscillatory residual below that
-floor, so T^-4 becomes the leading, *observable*, non-oscillatory error. The bump
-suppresses the oscillation harder, so its curve is smoother. (A second Richardson
-level would lower the floor to T^-6, but that sits below the residual oscillation
-and machine precision, so it is not observable -- see fig_distributions.py.)
+non-oscillatory T^-4 floor; the C^inf bump distribution (CF decays faster than any
+power) suppresses the oscillatory residual below that floor, so T^-4 becomes the
+leading, *observable*, non-oscillatory error. (A second Richardson level would
+lower the floor to T^-6, but that sits below the residual oscillation and machine
+precision, so it is not observable -- see fig_distributions.py.)
 
 Run with:  uv run python experiments/fig_scaling.py
 Writes:    figures/scaling.png
@@ -54,9 +52,6 @@ def main() -> None:
     e_single = single_phase_error(model, T)
     print("computing forward--reverse error ...")
     e_fr = forward_reverse_error(model, T)
-    print("computing 1 Richardson + triangle randomization ...")
-    e_tri = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
-                                       levels=1, dist="triangle", n_nodes=129)
     print("computing 1 Richardson + bump randomization ...")
     e_bump = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
                                         levels=1, dist="bump", n_nodes=129)
@@ -65,10 +60,8 @@ def main() -> None:
     ax.loglog(T, e_single, "o-", ms=5, color="C0",
               label=r"single evolution  $|\varphi|$")
     ax.loglog(T, e_fr, "s-", ms=5, color="C1", label=r"forward--reverse")
-    ax.loglog(T, e_tri, "v-", ms=5, color="C4",
-              label=r"1 Richardson + triangle")
     ax.loglog(T, e_bump, "^-", ms=5, color="C2",
-              label=r"1 Richardson + bump")
+              label=r"1 Richardson + bump randomization")
 
     # Reference slopes, anchored through the median of each curve over the upper
     # (more asymptotic) half so the guide sits on the data.
