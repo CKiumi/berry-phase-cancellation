@@ -16,6 +16,7 @@ Writes:    figures/manybody.png
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -31,14 +32,16 @@ from berry_cancellation.estimators import (
 
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 
-N = 4
+# Number of qubits from the command line (default 4): `... fig_manybody.py 8`.
+N = int(sys.argv[1]) if len(sys.argv) > 1 else 4
 J = 1.0
 B0 = 1.0
 THETA = 0.4 * np.pi
 LAM = 0.7
 ALPHA = 1.75
-T_MAX = 100.0
-N_POINTS = 20
+# Larger N -> 256-dim expm per runtime is costly, so use a shorter range.
+T_MAX = 100.0 if N <= 4 else 40.0
+N_POINTS = 20 if N <= 4 else 14
 
 
 def main() -> None:
@@ -101,7 +104,7 @@ def main() -> None:
     fig.tight_layout()
 
     FIG_DIR.mkdir(exist_ok=True)
-    out = FIG_DIR / "manybody.png"
+    out = FIG_DIR / ("manybody.png" if N == 4 else f"manybody_N{N}.png")
     fig.savefig(out, dpi=150)
     print(f"wrote {out}")
 

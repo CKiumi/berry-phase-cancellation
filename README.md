@@ -96,7 +96,8 @@ berry_cancellation/
 experiments/
   fig_scaling.py          main figure: error vs T for all four estimators
   fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
-  fig_manybody.py         same cancellation cascade on a 4-qubit entangled model
+  fig_manybody.py         same cancellation cascade on an entangled chain;
+                          takes an optional qubit count: `fig_manybody.py 8`
   fig_manybody_check.py   many-body Berry phase vs cone angle (analytic/Wilson/FR)
 tests/
   test_cancellation.py    references, unitarity, integrator convergence, slopes
@@ -114,6 +115,7 @@ uv sync                                     # set up the environment
 uv run python experiments/fig_scaling.py    # -> figures/scaling.png
 uv run python experiments/fig_spin_half_check.py
 uv run python experiments/fig_manybody.py   # -> figures/manybody.png (4-qubit model)
+uv run python experiments/fig_manybody.py 8 # -> figures/manybody_N8.png (8 qubits, slow)
 uv run python experiments/fig_manybody_check.py   # many-body Berry phase check
 uv run pytest                               # checks references + scaling slopes
 ```
