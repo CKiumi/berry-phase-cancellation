@@ -98,15 +98,12 @@ berry_cancellation/
                     own exact amplitudes, used by the many-body model)
   reference.py      Wilson-loop Berry phase, dynamical phase, angle wrapping
   estimators.py     single / forward–reverse / Richardson / randomized errors
-experiments/
-  fig_scaling.py          main figure: error vs T for all four estimators
-  fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
-  fig_theory_validation.py 4 panels, dipped vs non-dipped: Delta(s) along the loop,
-                          single ~Delta_min^-3/T, 1 Richardson ~Delta(0)^-4/T^2
-                          (endpoint), 1 Richardson+bump with an explicit upper bound
-                          C*Hdot(0)^2/(Delta(0)^4 Delta_min^2 T^4) (Theorem 3, M=2)
-  fig_manybody.py         same cancellation cascade on a 4-qubit entangled model
-  fig_manybody_check.py   many-body Berry phase vs cone angle (analytic/Wilson/FR)
+experiments.ipynb   all experiments + figures in one notebook (run top to bottom):
+                    1. headline cascade (spin-1/2), 2. spin-1/2 Berry-phase check,
+                    3. theory bounds (4 panels: Delta(s), single ~Delta_min,
+                       1 Richardson ~Delta(0), 1R+bump Theorem-3 bound),
+                    4. many-body cascade (4-qubit), 5. many-body Berry-phase check
+                    (every figure is rendered inline and embedded in the notebook)
 tests/
   test_cancellation.py    references, unitarity, integrator convergence, slopes
 ```
@@ -120,15 +117,19 @@ integrator error is verified to sit far below the adiabatic error it measures.
 
 ```bash
 uv sync                                     # set up the environment
-uv run python experiments/fig_scaling.py    # -> figures/scaling.png
-uv run python experiments/fig_spin_half_check.py
-uv run python experiments/fig_theory_validation.py # gap dip + bounds + endpoint control
-uv run python experiments/fig_manybody.py   # -> figures/manybody.png (4-qubit model)
-uv run python experiments/fig_manybody_check.py   # many-body Berry phase check
+
+# All experiments + figures live in experiments.ipynb (it ships with every figure
+# already embedded as a cell output). Open it in Jupyter using this env and run
+# top to bottom, or re-execute it headless (re-embeds every figure):
+uv run --with nbconvert --with ipykernel bash -c '
+  python -m ipykernel install --user --name bpc >/dev/null
+  jupyter nbconvert --to notebook --execute --inplace \
+    --ExecutePreprocessor.kernel_name=bpc experiments.ipynb'
+
 uv run pytest                               # checks references + scaling slopes
 ```
 
-`figures/scaling.png` is the headline plot (`T ∈ [8, 100]`, 20 points, `λ = 0.7`,
+Section 1 of the notebook is the headline plot (`T ∈ [8, 100]`, 20 points, `λ = 0.7`,
 chosen by a roughness scan as the smoothest while the `T⁻⁴` slope stays faithful):
 four curves whose log–log envelopes follow `T⁻¹` (single), `T⁻²` (forward–reverse),
 `T⁻⁴` (1 Richardson + `C^∞` bump), and `T⁻⁶` (2 Richardson + bump). Each Richardson
