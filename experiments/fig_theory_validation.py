@@ -49,7 +49,7 @@ def main() -> None:
     Hmd, Dmd, H0d, D0d = info(dip)
     print(f"no dip: Delta_min={Dmf:.2f};  dip a={A}: Delta_min={Dmd:.2f}, Delta(0)={D0d:.2f}")
 
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12.6, 5.4), sharey=True)
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12.6, 5.4))
 
     # --- Left: single evolution, dip vs no dip ------------------------------
     axL.loglog(T, single_phase_error(flat, T), "o", ms=6, mfc="none", color="C0",
@@ -73,9 +73,8 @@ def main() -> None:
                label=rf"dip ($a={A}$): numerics")
     axR.loglog(T, H0d**2 / D0d**4 / T**2, "-", color="k", lw=1.5,
                label=r"endpoint $\dot H(0)^2/(\Delta(0)^4 T^2)$ (both)")
-    axR.loglog(T, Hmd**2 / Dmd**4 / T**2, "--", color="C3", lw=1.2,
-               label=r"dip max-min $\dot H_{\max}^2/(\Delta_{\min}^4 T^2)$")
     axR.set_xlabel("runtime $T$")
+    axR.set_ylabel(r"phase error  (rad)")
     axR.set_title(r"1 Richardson — endpoint-controlled ($\Delta(0)$, dip-independent)")
     axR.legend(fontsize=8, loc="lower left")
     axR.grid(True, which="both", alpha=0.2)
