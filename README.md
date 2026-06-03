@@ -103,10 +103,6 @@ experiments/
   fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
   fig_gap_dip.py          non-isospectral loop (gap dips in the middle, a=0.4):
                           Delta(s) + the single/FR/1R-bump cascade (T^-1/-2/-4)
-  fig_dip_compare.py      single/FR/1-Richardson (no randomization), dip vs no dip:
-                          shows single/FR rise with the dip, Richardson less so
-  fig_phi1_validation.py  numerics vs the theory line phi_1/T (no fit), where
-                          phi_1 = int |<1|Hdot|0>|^2/Delta^3 ds -- quantitative check
   fig_theory_validation.py 3 panels, dipped vs non-dipped: single ~Delta_min^-3/T,
                           1 Richardson ~Delta(0)^-4/T^2 (endpoint), 1 Richardson+bump
                           with an explicit upper bound C*Hdot(0)^2/(Delta(0)^4 Delta_min^2 T^4)
@@ -129,8 +125,6 @@ uv sync                                     # set up the environment
 uv run python experiments/fig_scaling.py    # -> figures/scaling.png
 uv run python experiments/fig_spin_half_check.py
 uv run python experiments/fig_gap_dip.py    # non-isospectral loop (dipping gap)
-uv run python experiments/fig_dip_compare.py # dip vs no dip per estimator
-uv run python experiments/fig_phi1_validation.py  # numerics vs theory phi_1/T
 uv run python experiments/fig_theory_validation.py # max-min bounds + endpoint control
 uv run python experiments/fig_manybody.py   # -> figures/manybody.png (4-qubit model)
 uv run python experiments/fig_manybody_check.py   # many-body Berry phase check
