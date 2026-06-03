@@ -109,7 +109,8 @@ experiments/
                           phi_1 = int |<1|Hdot|0>|^2/Delta^3 ds -- quantitative check
   fig_theory_validation.py 3 panels, dipped vs non-dipped: single ~Delta_min^-3/T,
                           1 Richardson ~Delta(0)^-4/T^2 (endpoint), 1 Richardson+bump
-                          ~Delta(0)^-4 Delta_min^-2/T^4 (Theorem 3, M=2)
+                          with an explicit upper bound C*Hdot(0)^2/(Delta(0)^4 Delta_min^2 T^4)
+                          (Theorem 3, M=2) -- one constant C covers both loops
   fig_manybody.py         same cancellation cascade on a 4-qubit entangled model
   fig_manybody_check.py   many-body Berry phase vs cone angle (analytic/Wilson/FR)
 tests/

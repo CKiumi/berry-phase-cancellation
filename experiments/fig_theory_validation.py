@@ -91,16 +91,23 @@ def main() -> None:
     # endpoint Delta(0)^-4 AND interior Delta_min^-2.
     bf = randomized_richardson_bias(flat, T, alpha=1.75, lam=0.7, levels=1, dist="bump")
     bd = randomized_richardson_bias(dip, T, alpha=1.75, lam=0.7, levels=1, dist="bump")
-    K = np.median(bf * T**4)  # O(1) (distribution-dependent) prefactor, anchored on no-dip
+    # Upper bound of the Theorem-3 (M=2) form B(Delta) = C*||Hdot(0)||^2/(Delta(0)^4
+    # Delta_min^2 T^4). One distribution-dependent constant C covers both cases.
+    base_f = H0f**2 / D0f**4 / Dmf**2
+    base_d = H0d**2 / D0d**4 / Dmd**2
+    C = max(np.max(bf * T**4 / base_f), np.max(bd * T**4 / base_d))
+    bound_f, bound_d = C * base_f / T**4, C * base_d / T**4
+    print(f"upper-bound constant C={C:.1f}; tightness (median bound/num): "
+          f"no-dip {np.median(bound_f / bf):.2f}, dip {np.median(bound_d / bd):.2f}")
     axC.loglog(T, bf, "o", ms=6, mfc="none", color="C0", label="no dip: numerics")
-    axC.loglog(T, K / Dmf**2 / T**4, ":", color="C0", lw=1.5,
-               label=r"Thm 3 ($M{=}2$) $\propto \dot H(0)^2/(\Delta(0)^4\Delta_{\min}^2)\,T^{-4}$")
+    axC.loglog(T, bound_f, ":", color="C0", lw=1.5,
+               label=rf"upper bound (no dip), $C={C:.0f}$")
     axC.loglog(T, bd, "s", ms=6, color="C3", label=rf"dip ($a={A}$): numerics")
-    axC.loglog(T, K / Dmd**2 / T**4, "--", color="C3", lw=1.5,
-               label=r"Thm 3 (dip): $\times\,\Delta_{\min}^{-2}$")
+    axC.loglog(T, bound_d, "--", color="C3", lw=1.5,
+               label=r"upper bound (dip), $\times\,\Delta_{\min}^{-2}$")
     axC.set_xlabel("runtime $T$")
     axC.set_ylabel(r"phase error  (rad)")
-    axC.set_title(r"1 Richardson + bump random. — $T^{-4}$, $\propto\Delta_{\min}^{-2}$ (Thm 3, $M{=}2$)")
+    axC.set_title(r"1 Richardson + bump — bound $C\,\dot H(0)^2/(\Delta(0)^4\Delta_{\min}^2 T^4)$")
     axC.legend(fontsize=8, loc="lower left")
     axC.grid(True, which="both", alpha=0.2)
 
