@@ -37,8 +37,11 @@ B0 = 1.0
 THETA = 0.4 * np.pi
 LAM = 0.7
 ALPHA = 1.75
-T_MAX = 100.0
-N_POINTS = 20
+# The many-body gap (~0.37) is far smaller than the spin-1/2 gap (1.0), so the
+# pre-asymptotic constants are larger and the deepest (2 Richardson) curve needs a
+# longer runtime than scaling.png to settle onto its T^-6 asymptote.
+T_MAX = 250.0
+N_POINTS = 22
 
 
 def main() -> None:
