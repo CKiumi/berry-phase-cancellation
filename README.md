@@ -107,6 +107,8 @@ experiments/
                           shows single/FR rise with the dip, Richardson less so
   fig_phi1_validation.py  numerics vs the theory line phi_1/T (no fit), where
                           phi_1 = int |<1|Hdot|0>|^2/Delta^3 ds -- quantitative check
+  fig_theory_validation.py single + 1-Richardson vs max-min bounds (Hdot_max,
+                          Delta_min); Richardson tracks the endpoint Delta(0) bound
   fig_manybody.py         same cancellation cascade on a 4-qubit entangled model
   fig_manybody_check.py   many-body Berry phase vs cone angle (analytic/Wilson/FR)
 tests/
@@ -127,6 +129,7 @@ uv run python experiments/fig_spin_half_check.py
 uv run python experiments/fig_gap_dip.py    # non-isospectral loop (dipping gap)
 uv run python experiments/fig_dip_compare.py # dip vs no dip per estimator
 uv run python experiments/fig_phi1_validation.py  # numerics vs theory phi_1/T
+uv run python experiments/fig_theory_validation.py # max-min bounds + endpoint control
 uv run python experiments/fig_manybody.py   # -> figures/manybody.png (4-qubit model)
 uv run python experiments/fig_manybody_check.py   # many-body Berry phase check
 uv run pytest                               # checks references + scaling slopes
