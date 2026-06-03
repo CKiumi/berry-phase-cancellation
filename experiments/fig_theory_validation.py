@@ -23,7 +23,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from berry_cancellation import SpinHalfLoop
-from berry_cancellation.estimators import richardson_error, single_phase_error
+from berry_cancellation.estimators import (
+    randomized_richardson_bias,
+    richardson_error,
+    single_phase_error,
+)
 
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 
@@ -49,7 +53,7 @@ def main() -> None:
     Hmd, Dmd, H0d, D0d = info(dip)
     print(f"no dip: Delta_min={Dmf:.2f};  dip a={A}: Delta_min={Dmd:.2f}, Delta(0)={D0d:.2f}")
 
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12.6, 5.4))
+    fig, (axL, axR, axC) = plt.subplots(1, 3, figsize=(17.4, 5.2))
 
     # --- Left: single evolution, dip vs no dip ------------------------------
     axL.loglog(T, single_phase_error(flat, T), "o", ms=6, mfc="none", color="C0",
@@ -78,6 +82,27 @@ def main() -> None:
     axR.set_title(r"1 Richardson — endpoint-controlled ($\Delta(0)$, dip-independent)")
     axR.legend(fontsize=8, loc="lower left")
     axR.grid(True, which="both", alpha=0.2)
+
+    # --- Far right: 1 Richardson + bump randomization, dip vs no dip ---------
+    # Randomization kills the oscillatory (endpoint) residual, exposing the
+    # non-oscillatory T^-4 floor phi_4/T^4, which is interior (Delta_min)-controlled.
+    bf = randomized_richardson_bias(flat, T, alpha=1.75, lam=0.7, levels=1, dist="bump")
+    bd = randomized_richardson_bias(dip, T, alpha=1.75, lam=0.7, levels=1, dist="bump")
+    # Reference: phi_4/T^4 scaling with Delta_min (anchored on the no-dip curve;
+    # measured interior power ~ Delta_min^-1.7 -- contrast the endpoint panel).
+    K = np.median(bf * T**4)
+    p = 1.7
+    axC.loglog(T, bf, "o", ms=6, mfc="none", color="C0", label="no dip: numerics")
+    axC.loglog(T, K / Dmf**p / T**4, ":", color="C0", lw=1.5,
+               label=r"$\propto \Delta_{\min}^{-1.7}/T^4$")
+    axC.loglog(T, bd, "s", ms=6, color="C3", label=rf"dip ($a={A}$): numerics")
+    axC.loglog(T, K / Dmd**p / T**4, "--", color="C3", lw=1.5,
+               label=r"$\propto \Delta_{\min}^{-1.7}/T^4$ (dip)")
+    axC.set_xlabel("runtime $T$")
+    axC.set_ylabel(r"phase error  (rad)")
+    axC.set_title(r"1 Richardson + bump — $T^{-4}$ floor, back to $\Delta_{\min}$")
+    axC.legend(fontsize=8, loc="lower left")
+    axC.grid(True, which="both", alpha=0.2)
 
     fig.suptitle("Theory bounds vs numerics: dipped vs non-dipped loop "
                  rf"($\Delta_{{\min}}$: 1.0 vs {Dmd:.1f}, $\Delta(0)=1$ both)",
