@@ -101,8 +101,8 @@ berry_cancellation/
 experiments/
   fig_scaling.py          main figure: error vs T for all four estimators
   fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
-  fig_gap_dip.py          non-isospectral loop (gap dips to |B|(1-a) in the middle):
-                          Delta(s) + the scaling.png cascade on the dipping-gap loop
+  fig_gap_dip.py          non-isospectral loop (gap dips in the middle, a=0.4):
+                          Delta(s) + the single/FR/1R-bump cascade (T^-1/-2/-4)
   fig_manybody.py         same cancellation cascade on a 4-qubit entangled model
   fig_manybody_check.py   many-body Berry phase vs cone angle (analytic/Wilson/FR)
 tests/
