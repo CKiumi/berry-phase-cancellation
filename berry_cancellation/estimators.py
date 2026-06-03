@@ -53,17 +53,33 @@ def single_phase_error(model, T, steps=None):
     return np.abs(phi)
 
 
-def _theta_B_single(model, T, steps=None):
-    """Single-evolution Berry-phase estimate ``arg z_fwd + theta_D`` (theta_B mod 2 pi).
+def runtime_scaling_theta_B(model, T, frac=0.5, steps=None):
+    r"""Berry phase via the runtime-scaling method (arXiv:2509.13423).
 
-    The naive runtime-scaling estimate: read theta_B off one forward evolution after
-    subtracting the (known) dynamical phase. Its error is ``O(T^{-1})``.
+    Two forward adiabatic evolutions of the *same* loop are compared at runtimes
+    ``T`` and ``alpha T`` (``alpha > 1``).  The Berry phase is runtime-independent
+    while the dynamical phase scales linearly, ``theta_D -> alpha theta_D``, so the
+    two survival-amplitude eigenphases
+
+        phi(T)      = theta_B - theta_D            (mod 2 pi),
+        phi(alpha T)= theta_B - alpha theta_D      (mod 2 pi)
+
+    can be combined to cancel ``theta_D`` and reconstruct ``theta_B`` *without* any
+    knowledge of the spectrum -- in contrast to subtracting an analytically known
+    dynamical phase.  ``alpha`` is chosen from an energy *scale* only, so that
+    ``(alpha-1)|theta_D| ~ frac*pi < pi`` makes the mod-2 pi unwrapping unambiguous.
+    The residual error is the adiabatic error at the shorter runtime, ``O(T^{-1})``.
+    ``T`` is scalar.
     """
-    T = np.atleast_1d(np.asarray(T, float))
-    steps = steps or default_steps(T.max())
-    z_fwd, _ = loop_amplitudes(model, T, steps)
-    theta_D = np.array([dynamical_phase(model, t) for t in T])
-    return np.angle(z_fwd) + theta_D
+    T = float(np.atleast_1d(np.asarray(T, float))[0])
+    theta_D = dynamical_phase(model, T)
+    alpha = 1.0 + frac * np.pi / max(abs(theta_D), 1e-12)
+    steps = steps or default_steps(alpha * T)
+    z_T, _ = loop_amplitudes(model, np.array([T]), steps)
+    z_aT, _ = loop_amplitudes(model, np.array([alpha * T]), steps)
+    phi_T, phi_aT = np.angle(z_T[0]), np.angle(z_aT[0])
+    w = float(wrap_to_pi(phi_aT - phi_T))      # = -(alpha-1) theta_D, unwrapped
+    return phi_T - w / (alpha - 1.0)           # theta_B (mod 2 pi)
 
 
 def _theta_B_forward_reverse(model, T, steps):
