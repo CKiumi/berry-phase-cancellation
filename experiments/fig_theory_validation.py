@@ -5,11 +5,13 @@ Worst-case (max-min) bounds from the paper:
   * 1 Richardson:      residual ~ Hdot(0)^2 / (Delta(0)^4 T^2)  (ENDPOINT-controlled)
 
 The dip (a=0.4, |B(s)|=|B|(1-a sin^2 pi s)) lowers the interior gap to Delta_min=0.6
-while leaving the endpoints (Delta(0)=1, Hdot(0)) untouched. Left panel: the single
-error tracks Delta_min, so the dip raises both the numerics and (more) the max-min
-bound. Right panel: the Richardson residual is endpoint-controlled -- dipped and
-non-dipped numerics both track the SAME endpoint line Hdot(0)^2/(Delta(0)^4 T^2),
-far below the dip's (inflated) max-min bound.
+while leaving the endpoints (Delta(0)=1, Hdot(0)) untouched. Panels:
+  0. Delta(s) along the loop -- the gap dips in the interior, endpoints fixed.
+  1. single error tracks Delta_min, so the dip raises both the numerics and (more)
+     the max-min bound.
+  2. the Richardson residual is endpoint-controlled -- dipped and non-dipped
+     numerics both track the SAME line Hdot(0)^2/(Delta(0)^4 T^2).
+  3. 1 Richardson + bump: both loops under one Theorem-3 (M=2) upper bound.
 
 Run with:  uv run python experiments/fig_theory_validation.py
 Writes:    figures/theory_validation.png
@@ -53,9 +55,25 @@ def main() -> None:
     Hmd, Dmd, H0d, D0d = info(dip)
     print(f"no dip: Delta_min={Dmf:.2f};  dip a={A}: Delta_min={Dmd:.2f}, Delta(0)={D0d:.2f}")
 
-    fig, (axL, axR, axC) = plt.subplots(1, 3, figsize=(17.4, 5.2))
+    fig, (ax0, axL, axR, axC) = plt.subplots(1, 4, figsize=(22.4, 5.2))
 
-    # --- Left: single evolution, dip vs no dip ------------------------------
+    # --- Panel 0: the dipping gap Delta(s) along the loop -------------------
+    s = np.linspace(0.0, 1.0, 200)
+    ax0.plot(s, np.ones_like(s) * flat.field, "--", color="0.6",
+             label=r"$a=0$ (constant gap)")
+    ax0.plot(s, [dip.gap_at(si) for si in s], "-", color="C3", lw=2,
+             label=rf"$a={A}$")
+    ax0.axhline(dip.gap, color="C3", ls=":", lw=1)
+    ax0.annotate(rf"$\Delta_{{\min}}={dip.gap:.1f}$", xy=(0.5, dip.gap),
+                 xytext=(0.5, dip.gap - 0.13), ha="center", fontsize=9, color="C3")
+    ax0.set_xlabel("loop parameter $s$")
+    ax0.set_ylabel(r"gap $\Delta(s)$")
+    ax0.set_title(r"non-isospectral loop: gap dips inside")
+    ax0.set_ylim(0, 1.15)
+    ax0.legend(loc="lower center", fontsize=8)
+    ax0.grid(True, alpha=0.2)
+
+    # --- Single evolution, dip vs no dip -----------------------------------
     axL.loglog(T, single_phase_error(flat, T), "o", ms=6, mfc="none", color="C0",
                label="no dip: numerics")
     axL.loglog(T, Hmf**2 / Dmf**3 / T, ":", color="C0", lw=1.5,

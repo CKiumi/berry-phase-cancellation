@@ -40,7 +40,7 @@ cross-checked by a gauge-invariant Wilson loop).
 Optionally the field magnitude can be modulated, `|B(s)| = |B|·(1 − a sin²πs)`
 (the `gap_dip` parameter `a`), giving a **non-isospectral** loop whose gap is `|B|`
 at the endpoints and dips to `Δ_min = |B|(1−a)` in the middle — without changing
-the Berry phase. See `fig_gap_dip.py`.
+the Berry phase. See `fig_theory_validation.py` (first panel).
 
 ## How the estimators work
 
@@ -101,12 +101,10 @@ berry_cancellation/
 experiments/
   fig_scaling.py          main figure: error vs T for all four estimators
   fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
-  fig_gap_dip.py          non-isospectral loop (gap dips in the middle, a=0.4):
-                          Delta(s) + the single/FR/1R-bump cascade (T^-1/-2/-4)
-  fig_theory_validation.py 3 panels, dipped vs non-dipped: single ~Delta_min^-3/T,
-                          1 Richardson ~Delta(0)^-4/T^2 (endpoint), 1 Richardson+bump
-                          with an explicit upper bound C*Hdot(0)^2/(Delta(0)^4 Delta_min^2 T^4)
-                          (Theorem 3, M=2) -- one constant C covers both loops
+  fig_theory_validation.py 4 panels, dipped vs non-dipped: Delta(s) along the loop,
+                          single ~Delta_min^-3/T, 1 Richardson ~Delta(0)^-4/T^2
+                          (endpoint), 1 Richardson+bump with an explicit upper bound
+                          C*Hdot(0)^2/(Delta(0)^4 Delta_min^2 T^4) (Theorem 3, M=2)
   fig_manybody.py         same cancellation cascade on a 4-qubit entangled model
   fig_manybody_check.py   many-body Berry phase vs cone angle (analytic/Wilson/FR)
 tests/
@@ -124,8 +122,7 @@ integrator error is verified to sit far below the adiabatic error it measures.
 uv sync                                     # set up the environment
 uv run python experiments/fig_scaling.py    # -> figures/scaling.png
 uv run python experiments/fig_spin_half_check.py
-uv run python experiments/fig_gap_dip.py    # non-isospectral loop (dipping gap)
-uv run python experiments/fig_theory_validation.py # max-min bounds + endpoint control
+uv run python experiments/fig_theory_validation.py # gap dip + bounds + endpoint control
 uv run python experiments/fig_manybody.py   # -> figures/manybody.png (4-qubit model)
 uv run python experiments/fig_manybody_check.py   # many-body Berry phase check
 uv run pytest                               # checks references + scaling slopes
