@@ -35,12 +35,13 @@ N = 4
 J = 1.0
 B0 = 1.0
 THETA = 0.4 * np.pi
-LAM = 0.7
+LAM = 0.8
 ALPHA = 1.75
 # The many-body gap (~0.37) is far smaller than the spin-1/2 gap (1.0), so the
 # pre-asymptotic constants are larger and the deepest (2 Richardson) curve needs a
 # longer runtime than scaling.png to settle onto its T^-6 asymptote.
-T_MAX = 250.0
+T_MIN = 20.0
+T_MAX = 200.0
 N_POINTS = 22
 
 
@@ -50,7 +51,7 @@ def main() -> None:
     print(f"N={N} spiral Heisenberg chain: gap={model.gap:.4f}, "
           f"theta_B={model.berry_phase:.6f} (Wilson {wl:.6f})")
 
-    T = np.geomspace(8.0, T_MAX, N_POINTS)
+    T = np.geomspace(T_MIN, T_MAX, N_POINTS)
     alpha = ALPHA
 
     print("computing single-evolution phase error ...")
@@ -59,10 +60,10 @@ def main() -> None:
     e_fr = forward_reverse_error(model, T)
     print("computing 1 Richardson + bump randomization ...")
     e_bump1 = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
-                                         levels=1, dist="bump", n_nodes=129)
+                                         levels=1, dist="bump")
     print("computing 2 Richardson + bump randomization ...")
     e_bump2 = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
-                                         levels=2, dist="bump", n_nodes=129)
+                                         levels=2, dist="bump")
 
     fig, ax = plt.subplots(figsize=(7.2, 5.4))
     ax.loglog(T, e_single, "o-", ms=5, color="C0",
@@ -75,7 +76,7 @@ def main() -> None:
 
     # Reference slopes, anchored through the median of each curve over the upper
     # (more asymptotic) half so the guide sits on the data.
-    tail = T >= np.sqrt(8.0 * T_MAX)
+    tail = T >= np.sqrt(T_MIN * T_MAX)
     for power, e, style in [
         (-1, e_single, ":"),
         (-2, e_fr, "--"),
@@ -94,7 +95,7 @@ def main() -> None:
               rf"worst runtime $T(1{{+}}\lambda)\alpha^{{\rm lvl}}$: "
               rf"{worst1:.0f} (1R), {worst2:.0f} (2R)")
 
-    ax.set_xlim(7.0, T_MAX * 1.15)
+    ax.set_xlim(T_MIN * 0.9, T_MAX * 1.15)
     ax.set_xlabel("runtime $T$")
     ax.set_ylabel(r"phase error  $|\tilde\theta_B - \theta_B|$  (rad)")
     ax.set_title("Adiabatic error cancellation, many-qubit model "

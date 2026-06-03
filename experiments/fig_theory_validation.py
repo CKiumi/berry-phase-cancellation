@@ -101,7 +101,7 @@ def main() -> None:
           f"no-dip {np.median(bound_f / bf):.2f}, dip {np.median(bound_d / bd):.2f}")
     axC.loglog(T, bf, "o", ms=6, mfc="none", color="C0", label="no dip: numerics")
     axC.loglog(T, bound_f, ":", color="C0", lw=1.5,
-               label=rf"bound $C\,\dot H(0)^2/(\Delta(0)^4\Delta_{{\min}}^2 T^4)$ (no dip)")
+               label=r"bound $C\,\dot H(0)^2/(\Delta(0)^4\Delta_{\min}^2 T^4)$ (no dip)")
     axC.loglog(T, bd, "s", ms=6, color="C3", label=rf"dip ($a={A}$): numerics")
     axC.loglog(T, bound_d, "--", color="C3", lw=1.5,
                label=r"same bound (dip)")

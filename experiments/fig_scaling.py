@@ -54,10 +54,10 @@ def main() -> None:
     e_fr = forward_reverse_error(model, T)
     print("computing 1 Richardson + bump randomization ...")
     e_bump1 = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
-                                         levels=1, dist="bump", n_nodes=129)
+                                         levels=1, dist="bump")
     print("computing 2 Richardson + bump randomization ...")
     e_bump2 = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
-                                         levels=2, dist="bump", n_nodes=129)
+                                         levels=2, dist="bump")
 
     fig, ax = plt.subplots(figsize=(7.2, 5.4))
     ax.loglog(T, e_single, "o-", ms=5, color="C0",

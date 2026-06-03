@@ -69,7 +69,7 @@ def test_scaling_slopes(estimator, expected, tol):
 def test_randomization_steeper_than_richardson():
     m = SpinHalfLoop()
     T = np.geomspace(8.0, 200.0, 22)
-    slope = _slope(T, randomized_richardson_bias(m, T, n_nodes=129))
+    slope = _slope(T, randomized_richardson_bias(m, T))
     # Uniform randomization buys roughly one extra power of 1/T (-> ~T^-3).
     assert slope < -2.6
 
@@ -79,7 +79,7 @@ def test_triangle_randomization_reaches_T4():
     T = np.geomspace(8.0, 120.0, 16)
     # The triangle distribution (CF ~ k^-2) buys a further power -> ~T^-4.
     slope = _slope(T, randomized_richardson_bias(
-        m, T, levels=1, dist="triangle", n_nodes=129))
+        m, T, levels=1, dist="triangle"))
     assert slope < -3.6
 
 

@@ -71,7 +71,7 @@ def main() -> None:
     print("forward-reverse ..."); e_fr = forward_reverse_error(model, T)
     print("1 Richardson + bump ...")
     e_bump = randomized_richardson_bias(model, T, alpha=ALPHA, lam=LAM,
-                                        levels=1, dist="bump", n_nodes=129)
+                                        levels=1, dist="bump")
 
     axR.loglog(T, e_single, "o-", ms=5, color="C0",
                label=r"single evolution  $|\varphi|$")

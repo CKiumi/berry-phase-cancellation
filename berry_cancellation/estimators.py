@@ -116,38 +116,20 @@ def _recursive_richardson_error(model, r, alpha, levels, steps):
 
 
 def randomized_richardson_bias(
-    model, T, alpha=2.0, lam=0.5, levels=1, dist="uniform", n_nodes=129, steps=None
+    model, T, alpha=2.0, lam=0.5, levels=1, dist="uniform", steps=None
 ):
     r"""Deterministic bias of the runtime-randomized recursive-Richardson estimator.
 
-    For each base runtime ``T`` the runtime is randomized as ``T_j = T X_j`` and
-    the ``levels``-fold recursive Richardson forward--reverse estimator is averaged
-    over ``X``.  Returns ``|E_X[theta_R(T X)] - theta_B|`` (the infinite-shot bias),
-    evaluated by Simpson quadrature over the distribution of ``X``.
+    The runtime is randomized as ``T X`` (``X`` on ``[1-lam, 1+lam]``) and the
+    ``levels``-fold recursive Richardson forward--reverse estimate is averaged over
+    ``X`` by Simpson quadrature; returns ``|E_X[theta_R(T X)] - theta_B|``.
 
-    Two effects set the bias scaling:
-
-    * recursive Richardson cancels the non-oscillatory terms up to ``T^{-2 levels}``
-      (so the non-oscillatory residual is ``T^{-2(levels+1)}``);
-    * averaging suppresses the residual oscillatory ``T^{-2}`` term by the decay of
-      the distribution's characteristic function -- one power of ``1/T`` for the
-      ``uniform`` distribution (CF ``~ k^{-1}``), two for the ``triangle`` (CF
-      ``~ k^{-2}``).
-
-    Hence ``levels=1, dist='uniform'`` gives ``O(T^{-3})`` and
-    ``levels=2, dist='triangle'`` gives ``O(T^{-4})``.
-
-    Parameters
-    ----------
-    levels:
-        Number of recursive Richardson extrapolation levels (>= 1).
-    dist:
-        Runtime distribution on ``[1-lam, 1+lam]``: ``"uniform"`` (CF ``~ k^-1``,
-        oscillatory bias ``T^-3``), ``"triangle"`` (CF ``~ k^-2``, ``T^-4``), or
-        ``"bump"`` -- a ``C^inf`` bump whose CF decays faster than any power, so
-        the oscillatory residual is suppressed super-polynomially and the bias is
-        set by the *non-oscillatory* Richardson residual ``T^-2(levels+1)``
-        (smooth, non-oscillating).
+    Recursive Richardson removes the non-oscillatory terms up to ``T^{-2 levels}``,
+    leaving a ``T^{-2(levels+1)}`` floor; averaging suppresses the oscillatory
+    ``T^{-2}`` residual by the distribution's characteristic-function decay:
+    ``uniform`` (CF ``~k^-1``) -> ``T^-3``, ``triangle`` (CF ``~k^-2``) -> ``T^-4``,
+    and the ``C^inf`` ``bump`` (CF faster than any power) pushes it below the
+    non-oscillatory floor.
     """
     from scipy.integrate import simpson
 
@@ -168,7 +150,7 @@ def randomized_richardson_bias(
     bias = np.empty(T.shape)
     for i, t in enumerate(T):
         phase_span = omega * (alpha**levels) * t * (2.0 * lam)
-        n_target = max(n_nodes, int(np.ceil(phase_span / (2.0 * np.pi) * 8)))
+        n_target = max(129, int(np.ceil(phase_span / (2.0 * np.pi) * 8)))
         n_half = min(8192, max(2, n_target // 2)) // 2 * 2  # even -> odd half-grids
         xl = np.linspace(1.0 - lam, 1.0, n_half + 1)
         xr = np.linspace(1.0, 1.0 + lam, n_half + 1)
