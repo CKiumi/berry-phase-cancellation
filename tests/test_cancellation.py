@@ -83,6 +83,20 @@ def test_triangle_randomization_reaches_T4():
     assert slope < -3.6
 
 
+def test_gap_dip_nonisospectral():
+    # Field-magnitude modulation makes a non-isospectral loop: gap dips in the
+    # middle, large at the endpoints, with the Berry phase unchanged.
+    m = SpinHalfLoop(gap_dip=0.8)
+    assert np.isclose(m.gap_at(0.0), 1.0)
+    assert np.isclose(m.gap_at(0.5), 0.2)
+    assert np.isclose(m.gap, 0.2)  # minimum over the loop
+    assert np.isclose(m.berry_phase, SpinHalfLoop().berry_phase)
+    # The cancellation still works: forward-reverse steepens past single.
+    T = np.geomspace(20.0, 200.0, 16)
+    assert _slope(T, single_phase_error(m, T)) > -1.3
+    assert _slope(T, forward_reverse_error(m, T)) < -1.5
+
+
 def test_manybody_cancellation():
     # The cancellation must also work in a non-trivial entangled many-qubit model.
     from berry_cancellation.manybody import SpiralHeisenbergChain

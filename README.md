@@ -37,6 +37,11 @@ where `Ω` is the solid angle subtended by the loop. This exact value is the
 ground truth the estimators are compared against (and is independently
 cross-checked by a gauge-invariant Wilson loop).
 
+Optionally the field magnitude can be modulated, `|B(s)| = |B|·(1 − a sin²πs)`
+(the `gap_dip` parameter `a`), giving a **non-isospectral** loop whose gap is `|B|`
+at the endpoints and dips to `Δ_min = |B|(1−a)` in the middle — without changing
+the Berry phase. See `fig_gap_dip.py`.
+
 ## How the estimators work
 
 The forward and reverse loop evolutions give survival amplitudes
@@ -96,6 +101,7 @@ berry_cancellation/
 experiments/
   fig_scaling.py          main figure: error vs T for all four estimators
   fig_spin_half_check.py  Berry phase vs analytic half-solid-angle
+  fig_gap_dip.py          non-isospectral loop: gap dips in the middle (a=0.8)
   fig_manybody.py         same cancellation cascade on a 4-qubit entangled model
   fig_manybody_check.py   many-body Berry phase vs cone angle (analytic/Wilson/FR)
 tests/
@@ -113,6 +119,7 @@ integrator error is verified to sit far below the adiabatic error it measures.
 uv sync                                     # set up the environment
 uv run python experiments/fig_scaling.py    # -> figures/scaling.png
 uv run python experiments/fig_spin_half_check.py
+uv run python experiments/fig_gap_dip.py    # non-isospectral loop (dipping gap)
 uv run python experiments/fig_manybody.py   # -> figures/manybody.png (4-qubit model)
 uv run python experiments/fig_manybody_check.py   # many-body Berry phase check
 uv run pytest                               # checks references + scaling slopes

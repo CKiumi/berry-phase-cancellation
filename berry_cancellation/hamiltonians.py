@@ -42,30 +42,51 @@ class SpinHalfLoop:
         Polar (cone) angle of the field in radians.  Must be in ``(0, pi)`` for a
         non-trivial, non-degenerate loop.
     field:
-        Magnitude ``|B|`` of the magnetic field.  Sets the (constant) gap.
+        Magnitude ``|B|`` of the magnetic field at the loop endpoints.
+    gap_dip:
+        Magnitude modulation amplitude ``a`` in ``[0, 1)``.  The field strength is
+        scaled by ``g(s) = 1 - a sin^2(pi s)``, so the gap is ``|B|`` at the
+        endpoints and dips to ``|B|(1-a)`` in the middle of the loop -- a
+        *non-isospectral* loop.  Default ``0`` gives the constant-gap loop.  The
+        Berry phase is unchanged (it depends only on the field direction).
     """
 
     theta0: float = 0.4 * np.pi
     field: float = 1.0
+    gap_dip: float = 0.0
+
+    def _g(self, s: float) -> float:
+        """Field-magnitude modulation ``g(s) = 1 - a sin^2(pi s)``."""
+        return 1.0 - self.gap_dip * np.sin(np.pi * s) ** 2
 
     def field_vector(self, s: float) -> np.ndarray:
-        """Magnetic field vector ``B(s)`` on the cone loop."""
+        """Magnetic field vector ``B(s) = |B| g(s) n(s)`` on the cone loop."""
         phi = 2.0 * np.pi * s
         st, ct = np.sin(self.theta0), np.cos(self.theta0)
-        return self.field * np.array([st * np.cos(phi), st * np.sin(phi), ct])
+        return self.field * self._g(s) * np.array(
+            [st * np.cos(phi), st * np.sin(phi), ct])
 
     def H(self, s: float) -> np.ndarray:
         """Hamiltonian ``H(s) = -(1/2) B(s) . sigma`` as a 2x2 complex array."""
         bx, by, bz = self.field_vector(s)
         return -0.5 * (bx * SIGMA_X + by * SIGMA_Y + bz * SIGMA_Z)
 
+    def gap_at(self, s: float) -> float:
+        """Instantaneous gap ``Delta(s) = |B| g(s)``."""
+        return self.field * self._g(s)
+
     def ground_energy(self, s: float) -> float:
-        """Instantaneous ground-state energy ``E_0(s) = -|B| / 2`` (constant)."""
-        return -0.5 * self.field
+        """Instantaneous ground-state energy ``E_0(s) = -|B| g(s) / 2``."""
+        return -0.5 * self.field * self._g(s)
 
     @property
     def gap(self) -> float:
-        """Spectral gap ``Delta = E_1 - E_0 = |B|`` (constant along the loop)."""
+        """Minimum gap along the loop, ``|B|(1 - a)`` (in the middle)."""
+        return self.field * (1.0 - self.gap_dip)
+
+    @property
+    def osc_freq(self) -> float:
+        """Fastest oscillation frequency = max gap ``|B|`` (sets quadrature nodes)."""
         return self.field
 
     def ground_state(self, s: float) -> np.ndarray:
