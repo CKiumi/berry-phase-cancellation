@@ -53,6 +53,19 @@ def single_phase_error(model, T, steps=None):
     return np.abs(phi)
 
 
+def _theta_B_single(model, T, steps=None):
+    """Single-evolution Berry-phase estimate ``arg z_fwd + theta_D`` (theta_B mod 2 pi).
+
+    The naive runtime-scaling estimate: read theta_B off one forward evolution after
+    subtracting the (known) dynamical phase. Its error is ``O(T^{-1})``.
+    """
+    T = np.atleast_1d(np.asarray(T, float))
+    steps = steps or default_steps(T.max())
+    z_fwd, _ = loop_amplitudes(model, T, steps)
+    theta_D = np.array([dynamical_phase(model, t) for t in T])
+    return np.angle(z_fwd) + theta_D
+
+
 def _theta_B_forward_reverse(model, T, steps):
     """Forward--reverse Berry-phase estimate ``(arg z_fwd + arg z_rev) / 2``.
 
@@ -115,28 +128,15 @@ def _recursive_richardson_error(model, r, alpha, levels, steps):
     return errs[0]
 
 
-def randomized_richardson_bias(
-    model, T, alpha=2.0, lam=0.5, levels=1, dist="uniform", steps=None
-):
-    r"""Deterministic bias of the runtime-randomized recursive-Richardson estimator.
+def _randomized_richardson_signed(model, T, alpha, lam, levels, dist, steps):
+    r"""Signed deterministic bias ``E_X[theta_R(T X)] - theta_B`` (per base runtime).
 
-    The runtime is randomized as ``T X`` (``X`` on ``[1-lam, 1+lam]``) and the
-    ``levels``-fold recursive Richardson forward--reverse estimate is averaged over
-    ``X`` by Simpson quadrature; returns ``|E_X[theta_R(T X)] - theta_B|``.
-
-    Recursive Richardson removes the non-oscillatory terms up to ``T^{-2 levels}``,
-    leaving a ``T^{-2(levels+1)}`` floor; averaging suppresses the oscillatory
-    ``T^{-2}`` residual by the distribution's characteristic-function decay:
-    ``uniform`` (CF ``~k^-1``) -> ``T^-3``, ``triangle`` (CF ``~k^-2``) -> ``T^-4``,
-    and the ``C^inf`` ``bump`` (CF faster than any power) pushes it below the
-    non-oscillatory floor.
+    Shared core of ``randomized_richardson_bias`` (its magnitude) and
+    ``_theta_B_randomized`` (``theta_B`` plus this signed value).
     """
     from scipy.integrate import simpson
 
     T = np.atleast_1d(np.asarray(T, float))
-
-    # Symmetric grid with the apex X=1 as a node; integrate each half separately
-    # so the triangle's kink at X=1 does not spoil Simpson's accuracy.
     if dist not in ("uniform", "triangle", "bump"):
         raise ValueError(f"unknown dist {dist!r}")
 
@@ -147,7 +147,9 @@ def randomized_richardson_bias(
     # available (spectral width / largest gap), falling back to the gap.
     omega = float(getattr(model, "osc_freq", getattr(model, "gap", 1.0)))
 
-    bias = np.empty(T.shape)
+    # Symmetric grid with the apex X=1 as a node; integrate each half separately
+    # so the triangle's kink at X=1 does not spoil Simpson's accuracy.
+    out = np.empty(T.shape)
     for i, t in enumerate(T):
         phase_span = omega * (alpha**levels) * t * (2.0 * lam)
         n_target = max(129, int(np.ceil(phase_span / (2.0 * np.pi) * 8)))
@@ -172,7 +174,32 @@ def randomized_richardson_bias(
         steps_i = steps or default_steps(alpha**levels * r.max())
         err_R = _recursive_richardson_error(model, r, alpha, levels, steps_i)
         integrand = err_R * dens
-        val = (simpson(integrand[:n_half + 1], x=x[:n_half + 1])
-               + simpson(integrand[n_half:], x=x[n_half:]))
-        bias[i] = np.abs(val)
-    return bias
+        out[i] = (simpson(integrand[:n_half + 1], x=x[:n_half + 1])
+                  + simpson(integrand[n_half:], x=x[n_half:]))
+    return out
+
+
+def randomized_richardson_bias(
+    model, T, alpha=2.0, lam=0.5, levels=1, dist="uniform", steps=None
+):
+    r"""Deterministic bias of the runtime-randomized recursive-Richardson estimator.
+
+    The runtime is randomized as ``T X`` (``X`` on ``[1-lam, 1+lam]``) and the
+    ``levels``-fold recursive Richardson forward--reverse estimate is averaged over
+    ``X`` by Simpson quadrature; returns ``|E_X[theta_R(T X)] - theta_B|``.
+
+    Recursive Richardson removes the non-oscillatory terms up to ``T^{-2 levels}``,
+    leaving a ``T^{-2(levels+1)}`` floor; averaging suppresses the oscillatory
+    ``T^{-2}`` residual by the distribution's characteristic-function decay:
+    ``uniform`` (CF ``~k^-1``) -> ``T^-3``, ``triangle`` (CF ``~k^-2``) -> ``T^-4``,
+    and the ``C^inf`` ``bump`` (CF faster than any power) pushes it below the
+    non-oscillatory floor.
+    """
+    return np.abs(_randomized_richardson_signed(model, T, alpha, lam, levels, dist, steps))
+
+
+def _theta_B_randomized(model, T, alpha=2.0, lam=0.5, levels=1, dist="uniform", steps=None):
+    """Berry-phase estimate of the runtime-randomized recursive-Richardson protocol,
+    ``theta_B + E_X[theta_R(T X) - theta_B]`` (mod pi)."""
+    return model.berry_phase + _randomized_richardson_signed(
+        model, T, alpha, lam, levels, dist, steps)
