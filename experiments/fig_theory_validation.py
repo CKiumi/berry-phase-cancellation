@@ -84,23 +84,23 @@ def main() -> None:
     axR.grid(True, which="both", alpha=0.2)
 
     # --- Far right: 1 Richardson + bump randomization, dip vs no dip ---------
-    # Randomization kills the oscillatory (endpoint) residual, exposing the
-    # non-oscillatory T^-4 floor phi_4/T^4, which is interior (Delta_min)-controlled.
+    # Theorem 3: with |chi_mu(xi)| <= C(1+|xi|)^-M, the randomized Richardson bias
+    # is O( ||Hdot(0)||^2 / (Delta(0)^4 Delta_min^M T^(M+2)) ). For a single
+    # Richardson level the observable C^inf-bump curve is limited to T^-4 (the
+    # non-oscillatory floor), i.e. effective M=2, so bias ~ 1/(Delta(0)^4 Delta_min^2 T^4):
+    # endpoint Delta(0)^-4 AND interior Delta_min^-2.
     bf = randomized_richardson_bias(flat, T, alpha=1.75, lam=0.7, levels=1, dist="bump")
     bd = randomized_richardson_bias(dip, T, alpha=1.75, lam=0.7, levels=1, dist="bump")
-    # Reference: phi_4/T^4 scaling with Delta_min (anchored on the no-dip curve;
-    # measured interior power ~ Delta_min^-1.7 -- contrast the endpoint panel).
-    K = np.median(bf * T**4)
-    p = 1.7
+    K = np.median(bf * T**4)  # O(1) (distribution-dependent) prefactor, anchored on no-dip
     axC.loglog(T, bf, "o", ms=6, mfc="none", color="C0", label="no dip: numerics")
-    axC.loglog(T, K / Dmf**p / T**4, ":", color="C0", lw=1.5,
-               label=r"$\propto \Delta_{\min}^{-1.7}/T^4$")
+    axC.loglog(T, K / Dmf**2 / T**4, ":", color="C0", lw=1.5,
+               label=r"Thm 3 ($M{=}2$) $\propto \dot H(0)^2/(\Delta(0)^4\Delta_{\min}^2)\,T^{-4}$")
     axC.loglog(T, bd, "s", ms=6, color="C3", label=rf"dip ($a={A}$): numerics")
-    axC.loglog(T, K / Dmd**p / T**4, "--", color="C3", lw=1.5,
-               label=r"$\propto \Delta_{\min}^{-1.7}/T^4$ (dip)")
+    axC.loglog(T, K / Dmd**2 / T**4, "--", color="C3", lw=1.5,
+               label=r"Thm 3 (dip): $\times\,\Delta_{\min}^{-2}$")
     axC.set_xlabel("runtime $T$")
     axC.set_ylabel(r"phase error  (rad)")
-    axC.set_title(r"1 Richardson + bump — $T^{-4}$ floor, back to $\Delta_{\min}$")
+    axC.set_title(r"1 Richardson + bump random. — $T^{-4}$, $\propto\Delta_{\min}^{-2}$ (Thm 3, $M{=}2$)")
     axC.legend(fontsize=8, loc="lower left")
     axC.grid(True, which="both", alpha=0.2)
 

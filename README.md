@@ -107,9 +107,9 @@ experiments/
                           shows single/FR rise with the dip, Richardson less so
   fig_phi1_validation.py  numerics vs the theory line phi_1/T (no fit), where
                           phi_1 = int |<1|Hdot|0>|^2/Delta^3 ds -- quantitative check
-  fig_theory_validation.py 3 panels, dipped vs non-dipped: single ~Delta_min,
-                          1 Richardson ~Delta(0) (endpoint), 1 Richardson+bump ~Delta_min
-                          again (the non-oscillatory T^-4 floor)
+  fig_theory_validation.py 3 panels, dipped vs non-dipped: single ~Delta_min^-3/T,
+                          1 Richardson ~Delta(0)^-4/T^2 (endpoint), 1 Richardson+bump
+                          ~Delta(0)^-4 Delta_min^-2/T^4 (Theorem 3, M=2)
   fig_manybody.py         same cancellation cascade on a 4-qubit entangled model
   fig_manybody_check.py   many-body Berry phase vs cone angle (analytic/Wilson/FR)
 tests/
