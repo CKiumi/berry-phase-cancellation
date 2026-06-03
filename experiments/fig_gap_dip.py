@@ -1,15 +1,14 @@
-r"""Non-isospectral loop: a gap that dips in the middle.
+r"""Adiabatic error cancellation on a non-isospectral loop (dipping gap).
 
-Modulating the field magnitude, B(s) = |B| g(s) n(s) with g(s) = 1 - a sin^2(pi s),
-makes the gap vary along the loop -- large at the endpoints (|B|), small in the
-middle (|B|(1-a)) -- without changing the Berry phase (which depends only on the
-field direction). This is a genuinely non-isospectral loop, unlike the rigid
-rotations elsewhere in this repo.
+Same cascade as fig_scaling.py (single / forward-reverse / 1 Richardson + bump /
+2 Richardson + bump, same alpha, lambda, C^inf bump), but on a loop whose gap
+varies: modulating the field magnitude, |B(s)| = |B|(1 - a sin^2(pi s)), makes the
+gap |B| at the endpoints and Delta_min = |B|(1-a) in the middle, without changing
+the Berry phase. This shows the cancellation survives when the loop is genuinely
+non-isospectral.
 
-Left panel:  Delta(s) along the loop for a = 0 and a = 0.8.
-Right panel: the error cascade (single / forward-reverse / Richardson) for a = 0.8;
-             the cancellation still works, with errors set by the smaller mid-loop
-             gap Delta_min = |B|(1-a).
+Left panel:  Delta(s) along the loop (constant-gap reference vs the dip).
+Right panel: the error cascade vs runtime T.
 
 Run with:  uv run python experiments/fig_gap_dip.py
 Writes:    figures/gap_dip.png
@@ -25,32 +24,36 @@ import numpy as np
 from berry_cancellation import SpinHalfLoop
 from berry_cancellation.estimators import (
     forward_reverse_error,
-    richardson_error,
+    randomized_richardson_bias,
     single_phase_error,
 )
 
 FIG_DIR = Path(__file__).resolve().parent.parent / "figures"
 
-A = 0.8  # gap-dip amplitude
+A = 0.8            # gap-dip amplitude
+LAM = 0.7          # same as fig_scaling.py
+ALPHA = 1.75
+T_MIN = 20.0       # shifted up: the small mid-loop gap delays the adiabatic regime
+T_MAX = 200.0
+N_POINTS = 20
 
 
 def main() -> None:
     model = SpinHalfLoop(gap_dip=A)
     print(f"gap_dip a={A}: gap(endpoints)={model.field:.2f}, "
-          f"gap(min)={model.gap:.2f}, theta_B={model.berry_phase:.4f}")
+          f"Delta_min={model.gap:.2f}, theta_B={model.berry_phase:.4f}")
 
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12.0, 5.0))
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12.4, 5.2))
 
     # --- Left: Delta(s) along the loop --------------------------------------
     s = np.linspace(0.0, 1.0, 200)
-    axL.plot(s, [SpinHalfLoop(gap_dip=0.0).gap_at(si) for si in s], "--",
-             color="0.6", label=r"$a=0$ (constant gap)")
+    axL.plot(s, np.ones_like(s) * model.field, "--", color="0.6",
+             label=r"$a=0$ (constant gap)")
     axL.plot(s, [model.gap_at(si) for si in s], "-", color="C3", lw=2,
              label=rf"$a={A}$")
     axL.axhline(model.gap, color="C3", ls=":", lw=1)
-    axL.annotate(rf"$\Delta_{{\min}}=|B|(1-a)={model.gap:.1f}$",
-                 xy=(0.5, model.gap), xytext=(0.5, model.gap + 0.18),
-                 ha="center", fontsize=9, color="C3")
+    axL.annotate(rf"$\Delta_{{\min}}={model.gap:.1f}$", xy=(0.5, model.gap),
+                 xytext=(0.5, model.gap + 0.16), ha="center", fontsize=9, color="C3")
     axL.set_xlabel("loop parameter $s$")
     axL.set_ylabel(r"gap $\Delta(s)$")
     axL.set_title("Gap along the loop (non-isospectral)")
@@ -58,25 +61,42 @@ def main() -> None:
     axL.legend()
     axL.grid(True, alpha=0.2)
 
-    # --- Right: error cascade at a = 0.8 ------------------------------------
-    T = np.geomspace(20.0, 300.0, 24)
-    e_single = single_phase_error(model, T)
-    e_fr = forward_reverse_error(model, T)
-    e_rich = richardson_error(model, T)
-    axR.loglog(T, e_single, "o-", ms=4, color="C0",
+    # --- Right: error cascade (same curves as scaling.png) ------------------
+    T = np.geomspace(T_MIN, T_MAX, N_POINTS)
+    alpha = ALPHA
+    print("single ..."); e_single = single_phase_error(model, T)
+    print("forward-reverse ..."); e_fr = forward_reverse_error(model, T)
+    print("1 Richardson + bump ...")
+    e_bump1 = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
+                                         levels=1, dist="bump", n_nodes=129)
+    print("2 Richardson + bump ...")
+    e_bump2 = randomized_richardson_bias(model, T, alpha=alpha, lam=LAM,
+                                         levels=2, dist="bump", n_nodes=129)
+
+    axR.loglog(T, e_single, "o-", ms=5, color="C0",
                label=r"single evolution  $|\varphi|$")
-    axR.loglog(T, e_fr, "s-", ms=4, color="C1", label=r"forward--reverse")
-    axR.loglog(T, e_rich, "^-", ms=4, color="C2", label=r"+ Richardson ($\alpha=2$)")
-    tail = T >= np.sqrt(20.0 * 300.0)
-    for power, e, style in [(-1, e_single, ":"), (-2, e_fr, "--")]:
+    axR.loglog(T, e_fr, "s-", ms=5, color="C1", label=r"forward--reverse")
+    axR.loglog(T, e_bump1, "^-", ms=5, color="C2", label=r"1 Richardson + bump")
+    axR.loglog(T, e_bump2, "D-", ms=5, color="C3", label=r"2 Richardson + bump")
+
+    tail = T >= np.sqrt(T_MIN * T_MAX)
+    for power, e, style in [
+        (-1, e_single, ":"), (-2, e_fr, "--"),
+        (-4, e_bump1, (0, (5, 1))), (-6, e_bump2, "-."),
+    ]:
         c = np.median(e[tail] / T[tail] ** power)
         axR.loglog(T, c * T ** power, color="0.55", lw=1.0, linestyle=style,
                    label=rf"$\propto T^{{{power}}}$")
+
+    worst1 = T_MAX * (1.0 + LAM) * alpha
+    worst2 = T_MAX * (1.0 + LAM) * alpha**2
+    axR.set_xlim(T_MIN * 0.9, T_MAX * 1.15)
     axR.set_xlabel("runtime $T$")
     axR.set_ylabel(r"phase error  $|\tilde\theta_B - \theta_B|$  (rad)")
-    axR.set_title(rf"Cancellation with a dipping gap ($a={A}$, "
-                  rf"$\Delta_{{\min}}={model.gap:.1f}$)")
-    axR.legend(fontsize=8)
+    axR.set_title(rf"Cancellation, dipping gap ($a={A}$, $\Delta_{{\min}}={model.gap:.1f}$, "
+                  rf"$\alpha={alpha:g}$, $\lambda={LAM:g}$); "
+                  rf"worst rt {worst1:.0f}/{worst2:.0f}", fontsize=9)
+    axR.legend(fontsize=8, ncol=2, loc="lower left")
     axR.grid(True, which="both", alpha=0.2)
 
     fig.tight_layout()
