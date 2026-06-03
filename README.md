@@ -98,11 +98,13 @@ berry_cancellation/
                     own exact amplitudes, used by the many-body model)
   reference.py      Wilson-loop Berry phase, dynamical phase, angle wrapping
   estimators.py     single / forward–reverse / Richardson / randomized errors
-experiments.ipynb   all experiments + figures in one notebook (run top to bottom):
-                    1. headline cascade (spin-1/2), 2. spin-1/2 Berry-phase check,
+experiments.ipynb   all experiments + figures in one notebook (run top to bottom;
+                    each model is validated before it is simulated), with a paper-
+                    ready description + caption above every figure:
+                    1. spin-1/2 Berry-phase validation, 2. cascade (spin-1/2),
                     3. theory bounds (4 panels: Delta(s), single ~Delta_min,
                        1 Richardson ~Delta(0), 1R+bump Theorem-3 bound),
-                    4. many-body cascade (4-qubit), 5. many-body Berry-phase check
+                    4. many-body Berry-phase validation, 5. many-body cascade
                     (every figure is rendered inline and embedded in the notebook)
 tests/
   test_cancellation.py    references, unitarity, integrator convergence, slopes
