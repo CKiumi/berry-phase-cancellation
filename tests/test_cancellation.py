@@ -83,6 +83,22 @@ def test_triangle_randomization_reaches_T4():
     assert slope < -3.6
 
 
+def test_phi1_leading_coefficient():
+    # The single-evolution error converges to phi_1/T, with the loop invariant
+    # phi_1 = int |<1|Hdot|0>|^2 / Delta^3 ds computed from the model (no fit).
+    from scipy.linalg import eigh
+    m = SpinHalfLoop()
+    h, s = 1e-6, np.linspace(0.0, 1.0, 2000, endpoint=False)
+    tot = 0.0
+    for si in s:
+        Hd = (m.H(si + h) - m.H(si - h)) / (2 * h)
+        E, V = eigh(m.H(si))
+        tot += abs(V[:, 1].conj() @ Hd @ V[:, 0]) ** 2 / (E[1] - E[0]) ** 3
+    phi1 = tot / len(s)
+    sT = single_phase_error(m, 400.0)[0] * 400.0
+    assert abs(sT - phi1) / phi1 < 0.03
+
+
 def test_gap_dip_nonisospectral():
     # Field-magnitude modulation makes a non-isospectral loop: gap dips in the
     # middle, large at the endpoints, with the Berry phase unchanged.
