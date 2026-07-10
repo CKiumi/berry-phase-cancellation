@@ -66,14 +66,16 @@ def runtime_scaling_theta_B(model, T, frac=0.5, steps=None):
 
     can be combined to cancel ``theta_D`` and reconstruct ``theta_B`` *without* any
     knowledge of the spectrum -- in contrast to subtracting an analytically known
-    dynamical phase.  ``alpha`` is chosen from an energy *scale* only, so that
-    ``(alpha-1)|theta_D| ~ frac*pi < pi`` makes the mod-2 pi unwrapping unambiguous.
-    The residual error is the adiabatic error at the shorter runtime, ``O(T^{-1})``.
-    ``T`` is scalar.
+    dynamical phase.  ``alpha`` is chosen from a known energy *scale* only:
+    ``|theta_D| <= T ||H||``, so ``alpha - 1 = frac*pi / (T H_max)`` guarantees
+    ``(alpha-1)|theta_D| <= frac*pi < pi`` and the mod-2 pi unwrapping is
+    unambiguous without knowing ``theta_D`` itself.  The residual error is the
+    adiabatic error at the shorter runtime, ``O(T^{-1})``.  ``T`` is scalar.
     """
     T = float(np.atleast_1d(np.asarray(T, float))[0])
-    theta_D = dynamical_phase(model, T)
-    alpha = 1.0 + frac * np.pi / max(abs(theta_D), 1e-12)
+    H0 = model.H0 if hasattr(model, "H0") else model.H(0.0)
+    hmax = float(np.linalg.norm(H0, 2))           # known energy scale, >= |theta_D|/T
+    alpha = 1.0 + frac * np.pi / max(T * hmax, 1e-12)
     steps = steps or default_steps(alpha * T)
     z_T, _ = loop_amplitudes(model, np.array([T]), steps)
     z_aT, _ = loop_amplitudes(model, np.array([alpha * T]), steps)
